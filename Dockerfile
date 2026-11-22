@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
 # The app runs as a non-root user, so the default SQLite file must live in /app/data.
 ENV DATABASE_URL=sqlite:////app/data/nexus.db DATA_DIR=/app/data
 WORKDIR /app
-COPY requirements.txt requirements-ml.txt ./
+COPY requirements.txt requirements-ml.txt requirements-onnx.txt ./
 RUN pip install -r requirements.txt && \
     if [ "$WITH_ML" = "1" ]; then pip install -r requirements-ml.txt; fi
 RUN if [ "$WITH_ONNX" = "1" ]; then pip install -r requirements-onnx.txt && \
