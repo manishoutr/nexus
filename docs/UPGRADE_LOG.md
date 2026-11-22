@@ -138,3 +138,19 @@ No code changed. Found a clean ~880 line layout. Gaps against the target design:
 - Docker smoke job on GitHub failed in 5 s: `pull access denied for minio/mc`. Cause found by reading the job log in the browser. Fix (committed, not yet pushed): removed the unneeded `minio-init` service (the app creates its bucket), MinIO from `quay.io/minio/minio`. Compose and Docker build are still unexercised until a clean smoke run passes.
 - Second smoke run (4eafa5a): the build passed, then `quay.io/minio/minio:latest` was not pullable (401). MinIO's official community images are no longer available from Docker Hub or Quay, so the compose stack now uses `motoserver/moto` as the S3 server (in-memory, local and CI only; use AWS or another S3-compatible service for real data).
 - **Third smoke run (61dd265), all five CI jobs green:** https://github.com/manishoutr/nexus/actions/runs/45033117547. The docker-smoke job built the image, started api, worker, beat, pgvector Postgres, Redis and moto, waited for `/api/ready`, registered a user, uploaded a file, waited for the Celery worker to mark it done, and asked a question that returned a cited, non-abstained answer. Limits: light image only (hashing embeddings), moto is in-memory, the `WITH_ML=1` image was not built, no real Claude, not run on Render.
+
+## Live deploy (Render free tier)
+
+- First upgraded deploy failed at startup: the Docker image runs as a non-root user and the default SQLite path
+  (`/app/nexus.db`) was not writable. CI missed it because its stack uses PostgreSQL. Render kept the previous build
+  serving, so the demo stayed up. Fix: the image now defaults `DATABASE_URL` to `/app/data/nexus.db`. The live service
+  also sets it explicitly.
+- Live settings: `APP_ENV=production`, `EMBEDDING_BACKEND=hash`, `DATABASE_URL` as above, a generated `JWT_SECRET`
+  (stored in a password vault, not in the repo or CI).
+- Checked live: `/api/health`, `/api/ready`, sign-up, private workspace, upload processed to `done`, cited offline answer,
+  public sample workspace answer. Render logs showed no restarts or out-of-memory kills.
+- Why hash: a local run of the API with the ONNX embedder peaked around 317 MB resident memory under a small load
+  (limit 512 MB), so it would probably fit, but the image has no ONNX build option yet and the model would be
+  downloaded on every cold start. Not tried on Render.
+- Rollback: Render keeps the earlier deploy (f3befd4) with a Rollback button.
+- The CI JWT secret exposed in one failed run was random per run and never set on Render. The workflow no longer prints it.

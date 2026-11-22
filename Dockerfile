@@ -3,6 +3,8 @@
 FROM python:3.11-slim
 ARG WITH_ML=0
 ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+# The app runs as a non-root user, so the default SQLite file must live in /app/data.
+ENV DATABASE_URL=sqlite:////app/data/nexus.db DATA_DIR=/app/data
 WORKDIR /app
 COPY requirements.txt requirements-ml.txt ./
 RUN pip install -r requirements.txt && \

@@ -19,7 +19,7 @@ Read this first. It is the honest status of each claim.
 | Claude API | **Not tested with a real key.** The code path is tested with a fake client only. The app runs in offline mode (answers built from retrieved sentences) unless `ANTHROPIC_API_KEY` is set, and the UI says which mode is active. |
 | Docker / docker-compose | Ran on GitHub Actions (run 45033117547, commit 61dd265): the image built and the whole stack (API, Celery worker, beat, PostgreSQL+pgvector, Redis, moto S3) started, a user registered, a file uploaded, was processed by the Celery worker, and a cited non-abstained answer came back. That image is the light build (hashing embeddings), and the S3 server in compose is moto, in-memory. **Not run on my own machine** (no Docker there), and the `WITH_ML=1` image was not built. |
 | GitHub Actions CI | Ran on GitHub for commit dc37d19: lint, SQLite tests, tests against a pgvector Postgres service, and frontend tests/build all passed (https://github.com/manishoutr/nexus/actions/runs/45029088385). The first run failed because `alembic` was missing from requirements.txt; fixed. |
-| Live demo | Runs an older light build (hashing embeddings, SQLite). It does not have the upgrades described here yet. |
+| Live demo | https://nexus-pkju.onrender.com runs this upgraded build on Render's free tier: production mode, hashing embeddings, SQLite on an ephemeral disk, offline answers, local file storage. Sample data only. Not running there: PostgreSQL/pgvector, Redis, Celery, S3, a real Claude key, the sentence-transformers or ONNX embedder. The free instance sleeps after 15 idle minutes (first request takes up to a minute) and its data resets on redeploy. |
 
 ## What it does
 
