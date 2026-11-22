@@ -17,7 +17,7 @@ Read this first. It is the honest status of each claim.
 | Redis + Celery worker | Tested locally with a real Redis 6.2 and a real Celery worker process. |
 | S3 storage | Tested against moto, an S3-compatible server. **Not tested against AWS S3.** |
 | Claude API | **Not tested with a real key.** The code path is tested with a fake client only. The app runs in offline mode (answers built from retrieved sentences) unless `ANTHROPIC_API_KEY` is set, and the UI says which mode is active. |
-| Docker / docker-compose | Files written and YAML-checked. **Docker was not available where this was built, so they have never been built or run.** |
+| Docker / docker-compose | Ran on GitHub Actions (run 45033117547, commit 61dd265): the image built and the whole stack (API, Celery worker, beat, PostgreSQL+pgvector, Redis, moto S3) started, a user registered, a file uploaded, was processed by the Celery worker, and a cited non-abstained answer came back. That image is the light build (hashing embeddings), and the S3 server in compose is moto, in-memory. **Not run on my own machine** (no Docker there), and the `WITH_ML=1` image was not built. |
 | GitHub Actions CI | Ran on GitHub for commit dc37d19: lint, SQLite tests, tests against a pgvector Postgres service, and frontend tests/build all passed (https://github.com/manishoutr/nexus/actions/runs/45029088385). The first run failed because `alembic` was missing from requirements.txt; fixed. |
 | Live demo | Runs an older light build (hashing embeddings, SQLite). It does not have the upgrades described here yet. |
 
@@ -57,7 +57,7 @@ For real embeddings and the reranker: `pip install -r requirements-ml.txt` (pull
 ```bash
 JWT_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(48))") docker compose up --build
 ```
-Starts the API, a Celery worker and beat, PostgreSQL with pgvector, Redis and an in-memory S3-compatible server (moto). **Not yet run on my machine; see the Docker row above for the CI result.**
+Starts the API, a Celery worker and beat, PostgreSQL with pgvector, Redis and an in-memory S3-compatible server (moto). Verified in GitHub Actions, see the Docker row above.
 Without Docker, the same pieces can be started as separate processes; `tests/integration` does exactly that.
 
 ### Production settings
@@ -112,7 +112,7 @@ reranker, three quarters of related-but-unanswerable questions still get an answ
 
 ## Known limitations
 - No real Claude call has been made. Claude mode is unverified end to end.
-- S3 was tested against moto, not AWS. Docker files and CI have not been executed (see the table).
+- S3 was tested against moto, not AWS. The compose stack was run only in CI with the light image (see the table).
 - Refresh tokens cannot be revoked, there is no password reset and no email verification. Tokens are kept in
   `localStorage`, which any script on the page could read.
 - The injection filter is a list of known phrasings. A determined attacker can phrase around it.
