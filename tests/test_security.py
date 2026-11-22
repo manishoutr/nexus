@@ -268,3 +268,34 @@ def test_public_demo_cannot_be_modified_by_outsiders():
         assert c.post("/api/workspaces/1/members", json={"email": "rando@example.com", "role": "editor"}).status_code == want
         assert c.post("/api/workspaces/1/documents", files={"file": ("a.txt", TXT)}).status_code == want
     assert SessionLocal().query(Document).count() == 1
+
+
+def test_health_and_readiness_endpoints():
+    c = new_client()
+    assert c.get("/api/health").json()["status"] == "ok"
+    r = c.get("/api/ready")
+    assert r.status_code == 200 and r.json()["status"] == "ready", r.text
+    assert r.json()["checks"]["database"] == "ok" and r.json()["checks"]["migrations"] == "ok"
+    assert r.headers["x-request-id"]
+
+
+def test_readiness_returns_503_when_storage_fails(monkeypatch):
+    from app import main
+
+    class Broken:
+        name = "broken"
+
+        def exists(self, k):
+            raise RuntimeError("bucket gone")
+    monkeypatch.setattr(main, "get_storage", lambda: Broken())
+    r = new_client().get("/api/ready")
+    assert r.status_code == 503 and r.json()["checks"]["storage"].startswith("error")
+
+
+def test_json_log_format_merges_structured_events():
+    import json as _json
+    import logging
+    from app.logging_config import JsonFormatter
+    rec = logging.LogRecord("nexus.worker", logging.INFO, "f", 1, _json.dumps({"event": "job_done", "job": 7}), None, None)
+    out = _json.loads(JsonFormatter().format(rec))
+    assert out["event"] == "job_done" and out["job"] == 7 and out["level"] == "INFO" and "ts" in out

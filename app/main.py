@@ -1,5 +1,7 @@
 """Nexus API: workspaces, document upload, ingestion status, search, Q&A."""
 import hashlib
+import json
+import uuid
 import logging
 import time
 from pathlib import Path
@@ -19,6 +21,7 @@ from .config import settings
 from .db import SessionLocal, get_db, init_db
 from .models import (Chunk, Document, IngestionJob, Membership, QaLog, User,
                      Workspace)
+from .logging_config import request_id_var, setup_logging
 from .ratelimit import limiter
 from .schemas import (AskRequest, AskResponse, DocumentOut, LoginIn, MemberIn,
                       RefreshIn, RegisterIn, SearchRequest, SearchResponse,
@@ -30,8 +33,9 @@ from .services.storage import get_storage, new_key
 from .services.validate import UploadRejected, validate_upload
 from .services.worker import enqueue, jlog, pending_job_ids, start_worker, stop_worker
 
-logging.basicConfig(level=logging.INFO)
+setup_logging()
 log = logging.getLogger("nexus")
+access_log = logging.getLogger("nexus.access")
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -55,12 +59,29 @@ METRICS = {"requests": 0, "errors": 0, "total_latency_ms": 0.0,
 @app.middleware("http")
 async def metrics_middleware(request: Request, call_next):
     start = time.time()
-    response = await call_next(request)
-    METRICS["requests"] += 1
-    METRICS["total_latency_ms"] += (time.time() - start) * 1000
-    if response.status_code >= 500:
-        METRICS["errors"] += 1
-    return response
+    rid = request.headers.get("x-request-id", "")[:64] or uuid.uuid4().hex[:16]
+    token = request_id_var.set(rid)
+    try:
+        try:
+            response = await call_next(request)
+        except Exception:
+            METRICS["requests"] += 1
+            METRICS["errors"] += 1
+            log.exception("unhandled error: %s %s", request.method, request.url.path)
+            raise
+        ms = (time.time() - start) * 1000
+        METRICS["requests"] += 1
+        METRICS["total_latency_ms"] += ms
+        if response.status_code >= 500:
+            METRICS["errors"] += 1
+        response.headers["x-request-id"] = rid
+        if request.url.path != "/api/health":   # liveness probes would flood the log
+            access_log.info(json.dumps({"event": "request", "method": request.method,
+                                        "path": request.url.path, "status": response.status_code,
+                                        "ms": round(ms, 1)}))
+        return response
+    finally:
+        request_id_var.reset(token)
 
 
 def seed_demo_library() -> None:
@@ -134,6 +155,43 @@ def health(db: Session = Depends(get_db)):
     return {"status": "ok", "llm_mode": llm.mode,
             "workspaces": db.query(Workspace).count(),
             "chunks": db.query(Chunk).count()}
+
+
+@app.get("/api/ready")
+def ready(response: Response, db: Session = Depends(get_db)):
+    """Readiness: can this instance serve traffic right now? 503 if any
+    dependency check fails. (/api/health only says the process is alive.)"""
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+    from sqlalchemy import text
+    checks = {}
+    try:
+        db.execute(text("SELECT 1"))
+        checks["database"] = "ok"
+        cfg = Config(str(BASE_DIR / "alembic.ini"))
+        cfg.set_main_option("script_location", str(BASE_DIR / "migrations"))
+        head = ScriptDirectory.from_config(cfg).get_current_head()
+        current = db.execute(text("SELECT version_num FROM alembic_version")).scalar()
+        checks["migrations"] = "ok" if current == head else f"behind (db={current}, head={head})"
+    except Exception as e:  # noqa: BLE001
+        checks.setdefault("database", f"error: {type(e).__name__}")
+    try:
+        st = get_storage()
+        st.exists("_readiness_probe")
+        checks["storage"] = f"ok ({st.name})"
+    except Exception as e:  # noqa: BLE001
+        checks["storage"] = f"error: {type(e).__name__}"
+    if settings.queue_backend == "celery":
+        try:
+            import redis as redis_lib
+            redis_lib.Redis.from_url(settings.redis_url, socket_timeout=2).ping()
+            checks["redis"] = "ok"
+        except Exception as e:  # noqa: BLE001
+            checks["redis"] = f"error: {type(e).__name__}"
+    good = all(v.startswith("ok") for v in checks.values())
+    if not good:
+        response.status_code = 503
+    return {"status": "ready" if good else "not_ready", "checks": checks}
 
 
 @app.get("/api/metrics")

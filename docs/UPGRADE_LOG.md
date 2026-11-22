@@ -106,3 +106,15 @@ No code changed. Found a clean ~880 line layout. Gaps against the target design:
 - The dataset is small and written by the developer after reading the three seed documents, with only 12 chunks, so R@5 is close to trivially high and P@5 is capped by chunk overlap. Differences between configurations are mostly within noise.
 - The faithfulness metric is lexical and the offline answer is extractive, so it is near 1.0 by construction. It becomes informative only with Claude.
 - The reranker needs a second model download (about 90 MB) and torch.
+
+## Phase 6: infrastructure (IN PROGRESS, partial)
+**Done and tested**
+- Alembic (`alembic.ini`, `migrations/`): `0001` baseline is idempotent so databases created before Alembic are adopted without data loss; `0002` adds pgvector (`chunks.embedding_vec vector(384)` + HNSW cosine index, Postgres only). `init_db()` now runs `upgrade head`; the old ALTER shim is gone. DB URL comes from `DATABASE_URL`.
+- PostgreSQL + pgvector: similarity search runs inside Postgres when the MiniLM backend is active (`services/vectorstore.py`); BM25 stays in Python; the hashing fallback and SQLite use the JSON vectors.
+- Real-server testing without Docker: `python scripts/test_on_postgres.py` starts PostgreSQL 16.2 with pgvector 0.6.2 (pgserver package) and runs the suite on it.
+- Readiness `/api/ready` (database, migrations at head, storage, Redis when Celery is on; 503 on failure) next to the cheap `/api/health`. Structured JSON logs with request ids (`LOG_FORMAT=json|text`).
+- A bug found by running on Postgres: a NUL character in a question crashed the QA log insert. Questions are now cleaned before storage.
+
+**Tests:** SQLite 85 passed + 5 skipped (the pgvector tests skip off Postgres); on PostgreSQL the suite passes (79 earlier run, plus 8 migration/pgvector tests passed). Migrations: fresh schema equals the models (alembic autogenerate diff empty), upgrade repeatable, downgrade to base, pre-Alembic database adopted with data kept. pgvector: extension and HNSW index exist, vectors have 384 dims, the planner uses the HNSW index when seqscan is disabled, retrieval goes through pgvector and ranks the same as the Python cosine path, workspace isolation.
+
+**Still to do in Phase 6:** Dockerfile + docker-compose (api, celery worker, beat, postgres/pgvector, redis, MinIO), GitHub Actions (lint + tests, SQLite and Postgres/Redis services), `.env.example` and environment variable docs. Docker is not installed here, so compose files can only be validated for syntax locally, not run.
