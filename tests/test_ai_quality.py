@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.db import Base, SessionLocal, engine, init_db
+from app.db import SessionLocal, init_db, reset_db_for_tests
 from app.models import Chunk, Document, User, Workspace
 from app.schemas import Citation
 from app.services import llm as llm_mod
@@ -22,7 +22,7 @@ DOC = (b"Reciprocal rank fusion merges two ranked lists into one order. "
 @pytest.fixture(autouse=True)
 def fresh(monkeypatch):
     worker.stop_worker()
-    Base.metadata.drop_all(engine)
+    reset_db_for_tests()
     init_db()
     monkeypatch.setattr(llm_mod, "RETRY_BASE_S", 0.0)
     db = SessionLocal()

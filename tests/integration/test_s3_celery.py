@@ -21,7 +21,7 @@ redislite = pytest.importorskip("redislite")
 moto_server = pytest.importorskip("moto.server")
 
 from app.auth import make_token
-from app.db import Base, SessionLocal, engine, init_db  # noqa: E402
+from app.db import SessionLocal, init_db, reset_db_for_tests  # noqa: E402
 from app.models import Chunk, Document, IngestionJob, User, Workspace  # noqa: E402
 from app.services import storage as storage_mod  # noqa: E402
 from app.services import worker  # noqa: E402
@@ -32,7 +32,7 @@ TXT = b"Celery workers pull ingestion jobs from Redis. Each job is claimed in th
 
 @pytest.fixture(autouse=True)
 def fresh():
-    Base.metadata.drop_all(engine)
+    reset_db_for_tests()
     init_db()
     db = SessionLocal()
     db.add(User(email="owner@example.com", password_hash="x"))

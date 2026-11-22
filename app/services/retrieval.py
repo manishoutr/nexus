@@ -87,7 +87,7 @@ def rrf_merge(rankings: Sequence[Sequence[Tuple[int, float]]], k: int = 60
 
 
 def hybrid_scores(texts: Sequence[str], embeddings: Sequence[List[float]],
-                  query: str, alpha: float = 0.5
+                  query: str, alpha: float = 0.5, vector_scores=None
                   ) -> Tuple[List[float], Dict[str, List[float]]]:
     """RRF-ordered combined scores plus per-method components.
 
@@ -97,8 +97,12 @@ def hybrid_scores(texts: Sequence[str], embeddings: Sequence[List[float]],
     plus raw-cosine-scaled vector signal) used by the abstention gate.
     """
     b_ranking = bm25_rank(texts, query)
-    qv = embed(query)
-    v_ranking = vector_rank(embeddings, qv)
+    if vector_scores is not None:
+        # Cosine similarities computed elsewhere (pgvector); chunks outside
+        # the database's top-N get 0 and rank last.
+        v_ranking = sorted(enumerate(vector_scores), key=lambda t: t[1], reverse=True)
+    else:
+        v_ranking = vector_rank(embeddings, embed(query))
     fused = rrf_merge([b_ranking, v_ranking], k=settings.rrf_k)
     n = len(texts)
     combined = [fused.get(i, 0.0) for i in range(n)]

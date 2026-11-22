@@ -15,7 +15,8 @@ from pydantic import BaseModel
 from ..config import settings
 from ..models import Chunk
 from ..schemas import Citation
-from .embeddings import HASH_BACKEND_NAME, backend_name, tokenize
+from . import vectorstore
+from .embeddings import HASH_BACKEND_NAME, backend_name, embed, tokenize
 from .citations import strip_unverified_inline_refs, verify_citations
 from .llm import LLMError, llm
 from .rerank import rerank
@@ -42,8 +43,17 @@ def retrieve(db, workspace_id: int, query: str, k: Optional[int] = None
         return []
     doc_names = {d.id: d.filename
                  for d in db.query(Document).filter_by(workspace_id=workspace_id)}
+    vector_scores = None
+    qvec = embed(query)
+    model = backend_name()
+    if vectorstore.usable(model, len(qvec)):
+        # Similarity search inside PostgreSQL (pgvector, HNSW index).
+        sims = vectorstore.search(db, workspace_id, qvec, model, limit=max(50, k * 5))
+        vector_scores = [sims.get(c.id, 0.0) for c in chunks]
     combined, parts = hybrid_scores([c.text for c in chunks],
-                                    [c.embedding_list() for c in chunks], query)
+                                    [] if vector_scores is not None
+                                    else [c.embedding_list() for c in chunks],
+                                    query, vector_scores=vector_scores)
     ranked = sorted((RetrievedChunk(c, doc_names.get(c.document_id, "?"), s, st)
                      for c, s, st in zip(chunks, combined, parts["strength"])),
                     key=lambda r: r.score, reverse=True)

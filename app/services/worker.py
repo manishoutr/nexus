@@ -31,6 +31,7 @@ from ..models import Chunk, Document, IngestionJob
 from .chunk import chunk_document
 from .embeddings import backend_name, embed_many
 from .extract import extract_pages
+from . import vectorstore
 from .storage import get_storage
 from .validate import UploadRejected, validate_upload
 
@@ -82,6 +83,10 @@ def process_document(db, document_id: int) -> int:
                      seq=c["seq"], text=c["text"], page=c["page"],
                      section=c["section"], embedding=json.dumps(v),
                      embedding_model=model))
+    db.flush()
+    if vectorstore.usable(model, len(vectors[0])):
+        ids = [c.id for c in db.query(Chunk).filter_by(document_id=doc.id).order_by(Chunk.seq)]
+        vectorstore.store_vectors(db, ids, vectors)
     doc.page_count = max((p for p, _ in pages), default=0)
     doc.status = "done"
     doc.error = ""
@@ -229,6 +234,9 @@ def reembed_stale(db, batch_size: int = 64) -> int:
         for c, v in zip(batch, vectors):
             c.embedding = json.dumps(v)
             c.embedding_model = current
+        db.flush()
+        if vectorstore.usable(current, len(vectors[0])):
+            vectorstore.store_vectors(db, [c.id for c in batch], vectors)
         db.commit()
         done += len(batch)
     if done:

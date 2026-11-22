@@ -1,5 +1,7 @@
 """Database setup. SQLite by default; PostgreSQL via DATABASE_URL.
 JSON blobs are stored as Text so the same code runs on both engines."""
+from pathlib import Path
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -12,42 +14,23 @@ Base = declarative_base()
 
 
 def init_db() -> None:
+    """Bring the schema to the latest Alembic revision. Safe to call on every
+    start: a current database is left alone, an old one is upgraded, and a
+    database created before Alembic existed is adopted by the baseline."""
+    from alembic import command
+    from alembic.config import Config
+
     from . import models  # noqa: F401  (register models)
-    Base.metadata.create_all(engine)
-    _ensure_columns(engine)
+    cfg = Config(str(Path(__file__).resolve().parent.parent / "alembic.ini"))
+    cfg.set_main_option("script_location",
+                        str(Path(__file__).resolve().parent.parent / "migrations"))
+    with engine.begin() as conn:
+        cfg.attributes["connection"] = conn
+        command.upgrade(cfg, "head")
 
 
-# Columns added after the first release, as (table, column, DDL type).
-# create_all never alters existing tables, so existing databases get these
-# columns here. This shim is deliberately small; Alembic (see Phase 6 of the
-# upgrade) takes over real migrations.
-_LATE_COLUMNS = [
-    ("chunks", "embedding_model", "VARCHAR DEFAULT ''"),
-    ("workspaces", "owner_id", "INTEGER"),
-    ("workspaces", "is_public", "INTEGER DEFAULT 0"),
-    ("documents", "storage_key", "VARCHAR DEFAULT ''"),
-    ("documents", "content_hash", "VARCHAR"),
-    ("ingestion_jobs", "next_run_at", "TIMESTAMP"),
-    ("ingestion_jobs", "locked_at", "TIMESTAMP"),
-    ("ingestion_jobs", "worker_id", "VARCHAR DEFAULT ''"),
-]
-_LATE_INDEXES = [
-    "CREATE UNIQUE INDEX IF NOT EXISTS uq_doc_ws_hash ON documents (workspace_id, content_hash)",
-]
-
-
-def _ensure_columns(eng) -> None:
-    from sqlalchemy import inspect, text
-    insp = inspect(eng)
-    with eng.begin() as conn:
-        for table, column, ddl in _LATE_COLUMNS:
-            if table not in insp.get_table_names():
-                continue
-            existing = {c["name"] for c in insp.get_columns(table)}
-            if column not in existing:
-                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"))
-        for ddl in _LATE_INDEXES:
-            conn.execute(text(ddl))
+def is_postgres() -> bool:
+    return engine.dialect.name == "postgresql"
 
 
 def get_db():
@@ -56,3 +39,21 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def reset_db_for_tests() -> None:
+    """Drop every table, including Alembic's bookkeeping, then re-migrate."""
+    from sqlalchemy import text
+
+    from . import models  # noqa: F401
+    if is_postgres():
+        # Tests leave sessions open; their locks would block DROP TABLE forever.
+        with engine.connect() as conn:
+            conn.execution_options(isolation_level="AUTOCOMMIT").execute(text(
+                "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                "WHERE datname = current_database() AND pid <> pg_backend_pid()"))
+        engine.dispose()
+    Base.metadata.drop_all(engine)
+    with engine.begin() as conn:
+        conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
+    init_db()

@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import auth
-from app.db import Base, SessionLocal, engine, init_db
+from app.db import SessionLocal, init_db, reset_db_for_tests
 from app.main import app
 from app.models import Chunk, Document, Workspace
 from app.ratelimit import limiter
@@ -19,7 +19,7 @@ TXT = b"Hybrid retrieval combines BM25 keyword ranking with vector similarity. "
 @pytest.fixture(autouse=True)
 def fresh():
     worker.stop_worker()
-    Base.metadata.drop_all(engine)
+    reset_db_for_tests()
     init_db()
     limiter.enabled = False
     limiter.reset()

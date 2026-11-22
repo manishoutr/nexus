@@ -25,6 +25,7 @@ from .schemas import (AskRequest, AskResponse, DocumentOut, LoginIn, MemberIn,
                       TokenOut, UserOut, WorkspaceIn, WorkspaceOut)
 from .services import qa as qa_service
 from .services.llm import llm
+from .services.safety import clean_question
 from .services.storage import get_storage, new_key
 from .services.validate import UploadRejected, validate_upload
 from .services.worker import enqueue, jlog, pending_job_ids, start_worker, stop_worker
@@ -351,12 +352,13 @@ def ask(request: Request, workspace_id: int, req: AskRequest,
         user: Optional[User] = Depends(auth.optional_user)):
     auth.require_role(db, workspace_id, user, "viewer")
     METRICS["questions"] += 1
-    if not req.question.strip():
+    question = clean_question(req.question)   # NUL etc. would also break PostgreSQL text columns
+    if not question:
         raise HTTPException(422, "Question must not be empty")
-    result = qa_service.ask(db, workspace_id, req.question, req.k)
+    result = qa_service.ask(db, workspace_id, question, req.k)
     if result["abstained"]:
         METRICS["abstentions"] += 1
-    db.add(QaLog(workspace_id=workspace_id, question=req.question,
+    db.add(QaLog(workspace_id=workspace_id, question=question,
                  answer=result["answer"], mode=result["mode"],
                  abstained=1 if result["abstained"] else 0,
                  citations=__import__("json").dumps(
