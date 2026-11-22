@@ -302,3 +302,16 @@ def test_json_log_format_merges_structured_events():
     rec = logging.LogRecord("nexus.worker", logging.INFO, "f", 1, _json.dumps({"event": "job_done", "job": 7}), None, None)
     out = _json.loads(JsonFormatter().format(rec))
     assert out["event"] == "job_done" and out["job"] == 7 and out["level"] == "INFO" and "ts" in out
+
+
+def test_react_build_is_served_and_assets_exist():
+    """The built React app is committed under app/static; / must serve it and its bundle must resolve."""
+    import re
+    c = new_client()
+    html = c.get("/").text
+    assert '<div id="root">' in html
+    m = re.search(r'src="(/assets/[^"]+\.js)"', html)
+    assert m, "index.html does not reference a built bundle (run: cd frontend && npm run build)"
+    assert c.get(m.group(1)).status_code == 200
+    assert c.get("/styles.css").status_code == 200
+    assert c.get("/eval.html").status_code == 200
