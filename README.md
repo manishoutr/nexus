@@ -111,6 +111,9 @@ for PostgreSQL; `docker-compose.yml` includes an optional `pgvector` profile.
   in a real embedding model means replacing `embed()` and re-ingesting.
 - Retrieval merges two normalized rankings with a fixed weight; a learned
   reranker would improve ordering on harder queries.
+- Offline-mode abstention is a retrieval-score threshold: a question sharing
+  common words with a document (e.g. "capital") can pass it and get a generic
+  answer composed from the top passage. Claude mode judges relevance instead.
 - DOCX/TXT have no real page numbers; their citations use sections instead.
 - The threaded worker processes one job at a time; concurrent uploads queue.
   Horizontal scaling is the Celery swap described above.
