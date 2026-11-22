@@ -48,3 +48,37 @@ jobs:
       - run: npm run build
       - name: built bundle in app/static must match the source
         run: git diff --exit-code -- ../app/static/index.html
+  docker-smoke:
+    # Builds the image and runs the whole compose stack on the free GitHub runner, then
+    # drives it through the real API: sign up, upload, wait for the Celery worker, ask.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: start the stack
+        run: |
+          echo "JWT_SECRET=$(python3 -c 'import secrets;print(secrets.token_urlsafe(48))')" > .env
+          docker compose up -d --build
+      - name: wait for readiness
+        run: |
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /tmp/ready.json -w '%{http_code}' localhost:8000/api/ready || true)
+            [ "$code" = 200 ] && break; sleep 3
+          done
+          cat /tmp/ready.json; [ "$code" = 200 ]
+      - name: end to end through the API
+        run: |
+          B=localhost:8000
+          TOKEN=$(curl -sf $B/api/auth/register -H 'Content-Type: application/json' -d '{"email":"ci@example.com","password":"ci-password-123"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])')
+          H="Authorization: Bearer $TOKEN"
+          WS=$(curl -sf $B/api/workspaces -H "$H" -H 'Content-Type: application/json' -d '{"name":"ci"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["id"])')
+          curl -sf $B/api/workspaces/$WS/documents -H "$H" -F "file=@seed_docs/odisha-handlooms.txt" > /dev/null
+          for i in $(seq 1 40); do
+            S=$(curl -sf $B/api/workspaces/$WS/documents -H "$H" | python3 -c 'import sys,json;print(json.load(sys.stdin)[0]["status"])')
+            [ "$S" = done ] && break; sleep 2
+          done
+          echo "status=$S"; [ "$S" = done ]
+          curl -sf $B/api/workspaces/$WS/ask -H "$H" -H 'Content-Type: application/json' -d '{"question":"Which Odisha weave uses ikat?"}' | tee /tmp/ask.json
+          python3 -c 'import json;d=json.load(open("/tmp/ask.json"));assert d["citations"] and not d["abstained"]'
+      - name: logs on failure
+        if: failure()
+        run: docker compose logs --no-color | tail -150
