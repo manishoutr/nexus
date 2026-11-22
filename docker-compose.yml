@@ -1,0 +1,27 @@
+# Local demo: `docker compose up` runs the app on SQLite (zero config).
+# PostgreSQL is included to show the production shape: uncomment DATABASE_URL
+# below to run against it (SQLAlchemy handles both; see README).
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # DATABASE_URL: postgresql+psycopg2://nexus:nexus@db:5432/nexus
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LLM_MODE: ${LLM_MODE:-auto}
+    volumes:
+      - nexus-data:/app/data
+
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: nexus
+      POSTGRES_PASSWORD: nexus
+      POSTGRES_DB: nexus
+    ports:
+      - "5432:5432"
+    profiles: ["postgres"]   # opt-in: docker compose --profile postgres up
+
+volumes:
+  nexus-data:

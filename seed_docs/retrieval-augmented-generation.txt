@@ -1,0 +1,39 @@
+Retrieval-Augmented Generation
+
+Retrieval-augmented generation, usually shortened to RAG, is an architecture
+pattern where a language model answers questions using passages fetched from
+a document store, instead of relying only on what it memorised during
+training. The pattern has three stages: indexing, retrieval and generation.
+
+Indexing
+During indexing, documents are split into smaller units called chunks. A
+chunk is usually a few hundred words, small enough to embed meaningfully and
+large enough to contain a complete thought. Each chunk is converted into a
+vector, a list of numbers that captures its lexical or semantic content, and
+stored in a searchable index alongside metadata such as the source document
+and page number.
+
+Retrieval
+When a user asks a question, the system converts the question into the same
+kind of representation and finds the most similar chunks. Keyword methods
+such as BM25 rank chunks by exact term matches and term rarity. Vector
+methods rank chunks by embedding similarity, which can catch paraphrases.
+Hybrid retrieval combines both rankings, because keyword search is precise
+for names and rare terms while vector search tolerates rewording. Merging
+two ranked lists is typically done with score normalisation or reciprocal
+rank fusion.
+
+Generation
+The retrieved chunks are passed to the language model inside its prompt,
+with instructions to answer only from that evidence. A well-behaved RAG
+system cites the chunks it used, so a reader can verify every claim against
+the source. When no chunk contains the answer, the system should abstain
+rather than invent a plausible-sounding reply. Abstention is the main
+defence against hallucination in grounded systems.
+
+Evaluation
+Retrieval quality is measured with recall at k, the fraction of questions
+whose supporting passage appears in the top k results, and with ranking
+metrics such as NDCG. Answer quality is measured by checking whether each
+claim is supported by the cited passage and whether the system abstains when
+it should.
