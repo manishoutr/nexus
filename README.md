@@ -73,7 +73,7 @@ python scripts/test_on_postgres.py         # the suite on a real PostgreSQL + pg
 cd frontend && npm test                    # React tests (vitest)
 ruff check .
 ```
-Last local run: 92 passed and 5 skipped on SQLite (the skipped ones need Postgres), 91 passed on PostgreSQL,
+Last local run: 93 passed and 5 skipped on SQLite (the skipped ones need Postgres), 91 passed on PostgreSQL,
 9 frontend tests passed, ruff clean. An end-to-end run in a real headless Chrome registered a user, created a workspace,
 uploaded a file, waited for ingestion and asked a question.
 

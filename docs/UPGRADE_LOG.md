@@ -115,7 +115,7 @@ No code changed. Found a clean ~880 line layout. Gaps against the target design:
 - Readiness `/api/ready` (database, migrations at head, storage, Redis when Celery is on; 503 on failure) next to the cheap `/api/health`. Structured JSON logs with request ids (`LOG_FORMAT=json|text`).
 - A bug found by running on Postgres: a NUL character in a question crashed the QA log insert. Questions are now cleaned before storage.
 
-**Tests:** SQLite 85 passed + 5 skipped (the pgvector tests skip off Postgres); on PostgreSQL the suite passes (79 earlier run, plus 8 migration/pgvector tests passed). Migrations: fresh schema equals the models (alembic autogenerate diff empty), upgrade repeatable, downgrade to base, pre-Alembic database adopted with data kept. pgvector: extension and HNSW index exist, vectors have 384 dims, the planner uses the HNSW index when seqscan is disabled, retrieval goes through pgvector and ranks the same as the Python cosine path, workspace isolation.
+**Tests:** SQLite 93 passed + 5 skipped (final); on PostgreSQL the suite passes (79 earlier run, plus 8 migration/pgvector tests passed). Migrations: fresh schema equals the models (alembic autogenerate diff empty), upgrade repeatable, downgrade to base, pre-Alembic database adopted with data kept. pgvector: extension and HNSW index exist, vectors have 384 dims, the planner uses the HNSW index when seqscan is disabled, retrieval goes through pgvector and ranks the same as the Python cosine path, workspace isolation.
 
 **Infrastructure files (added)**
 - `Dockerfile` (non-root, healthcheck, `WITH_ML=1` build arg for sentence-transformers), `docker-compose.yml` (api, celery worker, beat, pgvector Postgres, Redis, MinIO + bucket init), `.env.example`, `docs/ENVIRONMENT.md`.
