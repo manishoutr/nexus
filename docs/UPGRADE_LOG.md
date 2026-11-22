@@ -149,7 +149,8 @@ No code changed. Found a clean ~880 line layout. Gaps against the target design:
   (stored in a password vault, not in the repo or CI).
 - Checked live: `/api/health`, `/api/ready`, sign-up, private workspace, upload processed to `done`, cited offline answer,
   public sample workspace answer. Render logs showed no restarts or out-of-memory kills.
-- Why hash: a local run of the API with the ONNX embedder peaked around 317 MB resident memory under a small load
+- Update: the live service now uses `WITH_ONNX=1` and `EMBEDDING_BACKEND=onnx`. The image bakes the model in at build time. Render logs show `embedding backend: onnxruntime`. A paraphrased question and an off-topic question both abstained on the live demo, as expected without the reranker. Memory fit on Render is observed behaviour (no OOM kills in the logs), not a measurement; the free tier shows no memory graph. The production `JWT_SECRET` was rotated once through the password vault after its value appeared in an agent log.
+- Earlier reasoning for hash: a local run of the API with the ONNX embedder peaked around 317 MB resident memory under a small load
   (limit 512 MB), so it would probably fit, but the image has no ONNX build option yet and the model would be
   downloaded on every cold start. Not tried on Render.
 - Rollback: Render keeps the earlier deploy (f3befd4) with a Rollback button.
