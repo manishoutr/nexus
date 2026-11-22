@@ -23,6 +23,14 @@ def init_db() -> None:
 # upgrade) takes over real migrations.
 _LATE_COLUMNS = [
     ("chunks", "embedding_model", "VARCHAR DEFAULT ''"),
+    ("documents", "storage_key", "VARCHAR DEFAULT ''"),
+    ("documents", "content_hash", "VARCHAR"),
+    ("ingestion_jobs", "next_run_at", "TIMESTAMP"),
+    ("ingestion_jobs", "locked_at", "TIMESTAMP"),
+    ("ingestion_jobs", "worker_id", "VARCHAR DEFAULT ''"),
+]
+_LATE_INDEXES = [
+    "CREATE UNIQUE INDEX IF NOT EXISTS uq_doc_ws_hash ON documents (workspace_id, content_hash)",
 ]
 
 
@@ -36,6 +44,8 @@ def _ensure_columns(eng) -> None:
             existing = {c["name"] for c in insp.get_columns(table)}
             if column not in existing:
                 conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"))
+        for ddl in _LATE_INDEXES:
+            conn.execute(text(ddl))
 
 
 def get_db():

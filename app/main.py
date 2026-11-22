@@ -1,10 +1,12 @@
 """Nexus API: workspaces, document upload, ingestion status, search, Q&A."""
+import hashlib
 import logging
 import time
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .config import settings
@@ -13,9 +15,10 @@ from .models import Chunk, Document, IngestionJob, QaLog, Workspace
 from .schemas import (AskRequest, AskResponse, DocumentOut, SearchRequest,
                       SearchResponse, WorkspaceIn, WorkspaceOut)
 from .services import qa as qa_service
-from .services.extract import ALLOWED_EXTENSIONS
 from .services.llm import llm
-from .services.worker import start_worker, stop_worker
+from .services.storage import get_storage, new_key
+from .services.validate import UploadRejected, validate_upload
+from .services.worker import enqueue, jlog, pending_job_ids, start_worker, stop_worker
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("nexus")
@@ -60,16 +63,18 @@ def seed_demo_library() -> None:
         ws = Workspace(name="Research library")
         db.add(ws)
         db.flush()
-        dest_dir = Path(settings.data_dir) / str(ws.id)
-        dest_dir.mkdir(parents=True, exist_ok=True)
+        storage = get_storage()
         seeded = 0
         for name in SEED_FILES:
             src = SEED_DIR / name
             if not src.exists():
                 continue
             content = src.read_bytes()
-            (dest_dir / name).write_bytes(content)
+            key = new_key(ws.id)
+            storage.put(key, content)
             doc = Document(workspace_id=ws.id, filename=name, content_type="",
+                           storage_key=key,
+                           content_hash=hashlib.sha256(content).hexdigest(),
                            size_bytes=len(content), status="pending")
             db.add(doc)
             db.flush()
@@ -86,7 +91,17 @@ def startup() -> None:
     init_db()
     Path(settings.data_dir).mkdir(parents=True, exist_ok=True)
     seed_demo_library()
-    app.state.worker = start_worker()
+    if settings.queue_backend == "celery":
+        # Workers are separate processes. Push anything left pending (e.g.
+        # seeded above, or enqueued while the broker was down).
+        db = SessionLocal()
+        try:
+            for jid in pending_job_ids(db):
+                enqueue(jid)
+        finally:
+            db.close()
+    else:
+        app.state.worker = start_worker()
 
 
 @app.on_event("shutdown")
@@ -141,33 +156,49 @@ def list_workspaces(db: Session = Depends(get_db)):
 # --- documents --------------------------------------------------------------
 
 @app.post("/api/workspaces/{workspace_id}/documents", response_model=DocumentOut, status_code=201)
-async def upload_document(workspace_id: int, file: UploadFile = File(...),
+async def upload_document(workspace_id: int, response: Response,
+                          file: UploadFile = File(...),
                           db: Session = Depends(get_db)):
     METRICS["uploads"] += 1
     ws = db.query(Workspace).filter_by(id=workspace_id).first()
     if ws is None:
         raise HTTPException(404, f"Workspace {workspace_id} not found")
-    filename = Path(file.filename or "document").name  # strip any path tricks
-    if not filename.lower().endswith(ALLOWED_EXTENSIONS):
-        raise HTTPException(415, f"Unsupported file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}")
-    content = await file.read()
-    if len(content) == 0:
-        raise HTTPException(422, "Empty file")
-    if len(content) > settings.max_upload_mb * 1024 * 1024:
-        raise HTTPException(413, f"File too large (max {settings.max_upload_mb} MB)")
+    filename = Path(file.filename or "document").name  # display name only
+    content = await file.read(settings.max_upload_mb * 1024 * 1024 + 1)
+    try:
+        validate_upload(filename, content, settings.max_upload_mb * 1024 * 1024)
+    except UploadRejected as e:
+        raise HTTPException(e.status, e.message)
 
-    dest_dir = Path(settings.data_dir) / str(workspace_id)
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    (dest_dir / filename).write_bytes(content)
+    digest = hashlib.sha256(content).hexdigest()
+    existing = (db.query(Document)
+                .filter_by(workspace_id=workspace_id, content_hash=digest).first())
+    if existing is not None:  # idempotent: same bytes, same document
+        response.status_code = 200
+        return _doc_out(existing)
 
+    key = new_key(workspace_id)
+    get_storage().put(key, content)
     doc = Document(workspace_id=workspace_id, filename=filename,
                    content_type=file.content_type or "", size_bytes=len(content),
-                   status="pending")
+                   storage_key=key, content_hash=digest, status="pending")
     db.add(doc)
-    db.flush()
-    db.add(IngestionJob(document_id=doc.id))
-    db.commit()
+    try:
+        db.flush()
+        job = IngestionJob(document_id=doc.id, max_attempts=settings.job_max_attempts)
+        db.add(job)
+        db.commit()
+    except IntegrityError:  # lost a race with a concurrent identical upload
+        db.rollback()
+        get_storage().delete(key)
+        existing = (db.query(Document)
+                    .filter_by(workspace_id=workspace_id, content_hash=digest).first())
+        response.status_code = 200
+        return _doc_out(existing)
     db.refresh(doc)
+    jlog("document_uploaded", document=doc.id, workspace=workspace_id,
+         bytes=len(content), key=key)
+    enqueue(job.id)
     return _doc_out(doc)
 
 
@@ -183,6 +214,25 @@ def get_document(document_id: int, db: Session = Depends(get_db)):
     if doc is None:
         raise HTTPException(404, f"Document {document_id} not found")
     return _doc_out(doc)
+
+
+@app.delete("/api/documents/{document_id}", status_code=204)
+def delete_document(document_id: int, db: Session = Depends(get_db)):
+    """Remove the document, its chunks, its jobs and the stored file."""
+    doc = db.query(Document).filter_by(id=document_id).first()
+    if doc is None:
+        raise HTTPException(404, f"Document {document_id} not found")
+    key = doc.storage_key or f"{doc.workspace_id}/{doc.filename}"
+    db.query(Chunk).filter_by(document_id=doc.id).delete()
+    db.query(IngestionJob).filter_by(document_id=doc.id).delete()
+    db.delete(doc)
+    db.commit()  # rows first: a leftover object is harmless, a leftover row is not
+    try:
+        get_storage().delete(key)
+    except Exception:  # noqa: BLE001
+        log.exception("could not delete stored object %s", key)
+    jlog("document_deleted", document=document_id, key=key)
+    return Response(status_code=204)
 
 
 # --- search & ask -------------------------------------------------------------

@@ -9,6 +9,19 @@ class Settings:
         self.anthropic_model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
         self.llm_mode = os.getenv("LLM_MODE", "auto")
         self.data_dir = os.getenv("DATA_DIR", "./data")
+        # Storage: local (DATA_DIR) or s3 (any S3-compatible endpoint).
+        self.storage_backend = os.getenv("STORAGE_BACKEND", "local")
+        self.s3_bucket = os.getenv("S3_BUCKET", "nexus-documents")
+        self.s3_endpoint_url = os.getenv("S3_ENDPOINT_URL") or None
+        self.s3_region = os.getenv("AWS_REGION", "us-east-1")
+        # Job queue: db (threaded poller, no extra services) or celery (Redis).
+        self.queue_backend = os.getenv("QUEUE_BACKEND", "db")
+        self.redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+        self.job_max_attempts = int(os.getenv("JOB_MAX_ATTEMPTS", "3"))
+        self.job_backoff_base_s = float(os.getenv("JOB_BACKOFF_BASE_S", "2"))
+        # A job stuck in "processing" longer than this is presumed orphaned
+        # by a crashed worker and goes back to the queue.
+        self.job_stale_after_s = float(os.getenv("JOB_STALE_AFTER_S", "300"))
         self.max_upload_mb = int(os.getenv("MAX_UPLOAD_MB", "10"))
         # Embedding backend: auto (sentence-transformers if usable, else
         # hashing), st (require sentence-transformers) or hash (force the

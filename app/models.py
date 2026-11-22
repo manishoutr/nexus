@@ -1,7 +1,7 @@
 """ORM models. JSON fields are stored as JSON-encoded Text for portability."""
 import json
 
-from sqlalchemy import Column, DateTime, Integer, String, Text, func
+from sqlalchemy import Column, DateTime, Float, Integer, String, Text, UniqueConstraint, func
 
 from .db import Base
 
@@ -16,10 +16,17 @@ class Workspace(Base):
 
 class Document(Base):
     __tablename__ = "documents"
+    __table_args__ = (
+        # Same bytes uploaded twice to one workspace = one document. Enforced
+        # by the database so concurrent uploads can't both win.
+        UniqueConstraint("workspace_id", "content_hash", name="uq_doc_ws_hash"),
+    )
 
     id = Column(Integer, primary_key=True)
     workspace_id = Column(Integer, index=True)
-    filename = Column(String, nullable=False)
+    filename = Column(String, nullable=False)       # original name, display only
+    storage_key = Column(String, default="")        # "<workspace>/<uuid>" in storage
+    content_hash = Column(String, nullable=True)    # sha256 hex of the bytes
     content_type = Column(String, default="")
     size_bytes = Column(Integer, default=0)
     page_count = Column(Integer, default=0)
@@ -59,6 +66,9 @@ class IngestionJob(Base):
     status = Column(String, default="pending", index=True)  # pending/processing/done/failed
     attempts = Column(Integer, default=0)
     max_attempts = Column(Integer, default=3)
+    next_run_at = Column(DateTime, nullable=True)   # backoff: not claimable before this
+    locked_at = Column(DateTime, nullable=True)     # set when a worker claims it
+    worker_id = Column(String, default="")          # who holds the claim
     error = Column(Text, default="")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

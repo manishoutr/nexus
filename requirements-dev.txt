@@ -2,3 +2,8 @@
 pytest>=8.0
 httpx>=0.27
 reportlab>=4.0
+pytest
+httpx
+redislite
+moto[server]
+pgserver
