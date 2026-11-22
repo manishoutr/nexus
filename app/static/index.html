@@ -7,55 +7,56 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <header>
-    <h1>Nexus</h1>
-    <span id="mode-badge" class="badge">...</span>
-    <nav>
-      <button class="tab active" data-tab="documents">Documents</button>
-      <button class="tab" data-tab="search">Search</button>
-      <button class="tab" data-tab="ask">Ask</button>
-    </nav>
+  <header class="top">
+    <span class="brand">Nexus / Reading room</span>
+    <span class="push"><span id="ws-label" class="ws-label">...</span> <span id="mode-badge" class="mode">...</span></span>
   </header>
 
-  <main>
-    <div class="workspace-bar">
-      <label>Workspace</label>
-      <select id="workspace-select"></select>
-      <input id="new-workspace" placeholder="New workspace name" />
-      <button id="create-workspace">Create</button>
-    </div>
-
-    <!-- DOCUMENTS -->
-    <section id="tab-documents" class="panel active">
-      <h2>Documents</h2>
-      <p class="hint">Upload PDF, DOCX or TXT (max 10 MB). Ingestion runs in the background; statuses refresh automatically.</p>
-      <input type="file" id="doc-file" accept=".pdf,.docx,.txt,.md" />
-      <button id="upload-btn">Upload</button>
-      <span id="upload-status"></span>
+  <div class="shell">
+    <!-- LIBRARY TREE -->
+    <aside class="rail">
+      <small class="rail-label">Research library</small>
+      <div class="ws-row">
+        <select id="workspace-select"></select>
+        <button id="new-ws-btn" class="mini" title="New workspace">+ New</button>
+      </div>
+      <div id="new-ws-row" class="ws-row hidden">
+        <input id="new-workspace" placeholder="Workspace name" />
+        <button id="create-workspace" class="mini">Create</button>
+      </div>
       <div id="doc-list"></div>
-    </section>
-
-    <!-- SEARCH -->
-    <section id="tab-search" class="panel">
-      <h2>Hybrid search</h2>
-      <div class="searchbar">
-        <input id="search-input" placeholder="Search by keyword or meaning" />
-        <button id="search-btn">Search</button>
+      <div class="rail-bottom">
+        <input type="file" id="doc-file" accept=".pdf,.docx,.txt,.md" class="hidden" />
+        <button id="upload-btn" class="upload">+ Upload files</button>
+        <p id="upload-status" class="muted"></p>
       </div>
-      <div id="search-results"></div>
-    </section>
+    </aside>
 
-    <!-- ASK -->
-    <section id="tab-ask" class="panel">
-      <h2>Ask with citations</h2>
-      <p class="hint">Nexus answers only from retrieved passages and says when evidence is insufficient. Every answer links back to its sources.</p>
+    <!-- PASSAGE READER -->
+    <main class="reader">
       <div class="searchbar">
-        <input id="ask-input" placeholder="Ask a question about your documents" />
-        <button id="ask-btn">Ask</button>
+        <input id="search-input" placeholder="Search the library by keyword or meaning" />
+        <button id="search-btn" class="btn">Search</button>
       </div>
-      <div id="ask-output"></div>
-    </section>
-  </main>
+      <div id="reader-content">
+        <small class="eyebrow">Welcome</small>
+        <h2 class="serif">A quiet library with a question beside the text.</h2>
+        <p class="doc">Upload documents on the left, search them here, and ask cited questions on the right. Nexus answers only from retrieved passages and says when evidence is insufficient.</p>
+      </div>
+    </main>
+
+    <!-- QUESTION PANEL -->
+    <aside class="ask-panel">
+      <small class="rail-label">Ask the library</small>
+      <div id="ask-output">
+        <p class="muted">Ask a question about the current workspace. Every answer links back to its sources.</p>
+      </div>
+      <div class="ask-input-row">
+        <input id="ask-input" placeholder="Ask a follow-up" />
+        <button id="ask-btn" class="mini" title="Ask">&#8593;</button>
+      </div>
+    </aside>
+  </div>
 
   <script src="/app.js"></script>
 </body>
