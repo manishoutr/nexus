@@ -238,3 +238,33 @@ def test_question_limits_and_control_chars():
     assert c.post(f"/api/workspaces/{ws}/ask", json={"question": "x" * 2001}).status_code == 422
     assert c.post(f"/api/workspaces/{ws}/search", json={"query": "q", "k": 500}).status_code == 422
     assert c.post(f"/api/workspaces/{ws}/ask", json={"question": "hello\x00\x07 world"}).status_code == 200
+
+
+def _import_auth(env):
+    import os, subprocess, sys
+    e = {k: v for k, v in os.environ.items() if k not in ("JWT_SECRET", "APP_ENV")}
+    e.update(env)
+    return subprocess.run([sys.executable, "-c", "import app.auth"], env=e,
+                          capture_output=True, text=True, cwd=os.getcwd())
+
+
+def test_production_fails_closed_without_strong_secret():
+    assert _import_auth({"APP_ENV": "production"}).returncode != 0
+    r = _import_auth({"APP_ENV": "production", "JWT_SECRET": "short"})
+    assert r.returncode != 0 and "JWT_SECRET" in r.stderr
+    assert _import_auth({"APP_ENV": "production", "JWT_SECRET": "x" * 40}).returncode == 0
+    assert _import_auth({"APP_ENV": "development"}).returncode == 0   # dev fallback allowed
+
+
+def test_public_demo_cannot_be_modified_by_outsiders():
+    db = SessionLocal()
+    db.add(Workspace(name="demo", owner_id=None, is_public=1))
+    db.add(Document(workspace_id=1, filename="seed.txt", status="done", storage_key="1/x"))
+    db.commit(); db.close()
+    anon, user = new_client(), new_client()
+    signup(user, "rando@example.com")
+    for c, want in ((anon, 401), (user, 403)):
+        assert c.delete("/api/documents/1").status_code == want
+        assert c.post("/api/workspaces/1/members", json={"email": "rando@example.com", "role": "editor"}).status_code == want
+        assert c.post("/api/workspaces/1/documents", files={"file": ("a.txt", TXT)}).status_code == want
+    assert SessionLocal().query(Document).count() == 1

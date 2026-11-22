@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus evaluation</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    main { max-width: 980px; margin: 0 auto; padding: 22px 18px 60px; }
+    h1 { font-family: Georgia, serif; font-weight: normal; font-size: 26px; margin: 6px 0 4px; }
+    h2 { font-family: Georgia, serif; font-weight: normal; font-size: 19px; margin: 30px 0 8px; }
+    .sub { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+    .card b { display: block; font-size: 24px; font-family: Georgia, serif; }
+    .card span { color: var(--muted); font-size: 12px; }
+    table { border-collapse: collapse; width: 100%; font-size: 14px; }
+    th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font-weight: normal; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+    .scroll { overflow-x: auto; }
+    .bar { background: var(--soft); border-radius: 4px; height: 10px; min-width: 90px; }
+    .bar i { display: block; height: 10px; background: var(--accent); border-radius: 4px; }
+    .note { background: #fff6e3; border: 1px solid #ecd9a8; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin: 8px 0; }
+    select { padding: 7px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--ink); }
+    .bad { color: #a3341f; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <span class="brand"><a href="/" style="color:inherit;text-decoration:none">Nexus</a> / Evaluation</span>
+  </header>
+  <main>
+    <h1>RAG evaluation results</h1>
+    <p class="sub">Produced by <code>python -m eval.run</code> on the labelled dataset in <code>eval/dataset.jsonl</code>. Offline answers only.</p>
+    <label>Configuration <select id="cfg"></select></label>
+    <div id="meta" class="sub" style="margin-top:10px"></div>
+    <div id="notes"></div>
+    <h2>Headline (all questions)</h2><div class="cards" id="cards"></div>
+    <h2>Retrieval: BM25 vs vector vs hybrid (answerable questions)</h2>
+    <div class="scroll"><table id="ret"></table></div>
+    <h2>Dev vs test split</h2>
+    <p class="sub">Thresholds were chosen on dev only. Test is the number to trust.</p>
+    <div class="scroll"><table id="split"></table></div>
+    <h2>By question type</h2><div class="scroll"><table id="types"></table></div>
+    <h2>Abstention threshold sweep</h2><div class="scroll"><table id="sweep"></table></div>
+    <h2>Wrong abstention decisions</h2><div class="scroll"><table id="fails"></table></div>
+  </main>
+<script>
+const CFGS = [["report-hash.json", "Hashing embeddings (light build)"],
+              ["report-st.json", "MiniLM sentence embeddings"],
+              ["report-st-rerank.json", "MiniLM + cross-encoder reranker"]];
+const $ = id => document.getElementById(id);
+const pct = x => (x * 100).toFixed(1) + "%";
+function el(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
+function table(t, head, rows) {
+  t.replaceChildren();
+  const tr = el("tr"); head.forEach(h => tr.append(el("th", h))); t.append(tr);
+  rows.forEach(r => { const row = el("tr"); r.forEach(c => { const td = el("td"); if (c instanceof Node) td.append(c); else td.textContent = c; row.append(td); }); t.append(row); });
+}
+function bar(v) { const b = el("div", undefined, "bar"), i = el("i"); i.style.width = Math.round(v * 100) + "%"; b.append(i); return b; }
+function card(label, value) { const c = el("div", undefined, "card"); c.append(el("b", value), el("span", label)); return c; }
+
+function render(r) {
+  const o = r.overall, m = r.meta, h = o.retrieval.hybrid_rrf, k = m.k;
+  $("meta").textContent = `${m.embedding_backend} | reranker: ${m.reranker} | ${m.chunks} chunks | k=${k} | commit ${m.git_commit || "n/a"} | ${m.generated_at}`;
+  $("notes").replaceChildren(...m.notes.map(n => el("div", n, "note")));
+  $("cards").replaceChildren(
+    card(`Precision@${k} (hybrid)`, pct(h["p@" + k])), card(`Recall@${k} (hybrid)`, pct(h["r@" + k])),
+    card("MRR (hybrid)", h.mrr.toFixed(3)), card("Abstention accuracy", pct(o.abstention.accuracy)),
+    card("Wrongly abstained", pct(o.abstention.false_abstain_rate)), card("Wrongly answered", pct(o.abstention.false_answer_rate)),
+    card("Citation validity", pct(o.citation_validity)), card("Citation precision", pct(o.citation_precision)),
+    card("Faithfulness (heuristic)", pct(o.faithfulness_heuristic)), card("Answer covers evidence", pct(o.answer_evidence_coverage)));
+  const keys = ["mrr", "p@1", "p@3", "p@" + k, "r@1", "r@3", "r@" + k].filter((x, i, a) => a.indexOf(x) === i && h[x] !== undefined);
+  table($("ret"), ["System", ...keys], ["bm25", "vector", "hybrid_rrf"].map(s => [s, ...keys.map(x => o.retrieval[s][x].toFixed(3))]));
+  table($("split"), ["Split", "Questions", "Abstention acc.", "Wrongly abstained", "Wrongly answered", "Hybrid MRR", `Hybrid R@${k}`],
+    ["dev", "test"].map(s => { const x = r[s]; return [s, x.questions, pct(x.abstention.accuracy), pct(x.abstention.false_abstain_rate), pct(x.abstention.false_answer_rate), x.retrieval.hybrid_rrf.mrr.toFixed(3), x.retrieval.hybrid_rrf["r@" + k].toFixed(3)]; }));
+  table($("types"), ["Type", "Questions", "Abstention acc.", "Hybrid MRR", `Hybrid R@${k}`, "Answer covers evidence"],
+    Object.entries(r.by_type).map(([t, x]) => [t, x.questions, pct(x.abstention.accuracy), x.answerable ? x.retrieval.hybrid_rrf.mrr.toFixed(3) : "-", x.answerable ? x.retrieval.hybrid_rrf["r@" + k].toFixed(3) : "-", x.answerable ? pct(x.answer_evidence_coverage) : "-"]));
+  const sw = r.rerank_threshold_sweep && r.rerank_threshold_sweep.length ? r.rerank_threshold_sweep : r.threshold_sweep;
+  const lbl = r.rerank_threshold_sweep && r.rerank_threshold_sweep.length ? "Cross-encoder score threshold" : "Evidence-strength threshold";
+  table($("sweep"), [lbl, "Dev accuracy", "Test accuracy", ""], sw.map(s => [String(s.threshold), pct(s.dev), pct(s.test), bar(s.test)]));
+  table($("fails"), ["ID", "Type", "Question", "Abstained?", "Answer shown"], r.failures.length ? r.failures.map(f => [f.id, f.type, f.question, f.abstained ? "yes (should answer)" : "no (should abstain)", f.abstained ? "" : f.answer.slice(0, 140)]) : [["", "", "none", "", ""]]);
+}
+async function load(file) {
+  try { const res = await fetch("/eval/" + file); if (!res.ok) throw new Error(res.status); render(await res.json()); }
+  catch (e) { $("meta").textContent = "Could not load " + file + ". Run python -m eval.run --publish first."; }
+}
+CFGS.forEach(([f, label]) => { const o = el("option", label); o.value = f; $("cfg").append(o); });
+$("cfg").value = "report-st-rerank.json";
+$("cfg").addEventListener("change", () => load($("cfg").value));
+load($("cfg").value);
+</script>
+</body>
+</html>

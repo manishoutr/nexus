@@ -16,7 +16,8 @@ from ..config import settings
 from ..models import Chunk
 from ..schemas import Citation
 from .embeddings import HASH_BACKEND_NAME, backend_name, tokenize
-from .llm import llm
+from .citations import strip_unverified_inline_refs, verify_citations
+from .llm import LLMError, llm
 from .rerank import rerank
 from .safety import SYSTEM_PROMPT, scan, build_passages_block, clean_question
 from .retrieval import hybrid_scores
@@ -51,15 +52,16 @@ def retrieve(db, workspace_id: int, query: str, k: Optional[int] = None
 
 
 def _citation(r: RetrievedChunk) -> Citation:
-    return Citation(document_id=r.chunk.document_id,
+    return Citation(chunk_id=r.chunk.id, document_id=r.chunk.document_id,
                     document_name=r.document_name,
                     page=r.chunk.page, section=r.chunk.section,
                     excerpt=r.chunk.text[:200])
 
 
 class _AnswerModel(BaseModel):
-    answer: str
-    used_chunk_ids: List[int]
+    answer: str = ""
+    insufficient_evidence: bool = False
+    used_chunk_ids: List[int] = []
 
 
 def _offline_answer(question: str, ranked: List[RetrievedChunk]) -> str:
@@ -93,8 +95,17 @@ def _abstain_threshold() -> float:
     return settings.abstain_threshold_st
 
 
+ABSTAIN_TEXT = ("I don't have enough evidence in the uploaded documents to "
+                "answer that. Try adding relevant documents or rephrasing the question.")
+
+
+def _abstain(mode: str, warnings=None, flagged: int = 0, text: str = ABSTAIN_TEXT) -> dict:
+    return {"answer": text, "citations": [], "mode": mode, "abstained": True,
+            "warnings": warnings or [], "flagged_passages": flagged}
+
+
 def ask(db, workspace_id: int, question: str, k: Optional[int] = None) -> dict:
-    """Returns {answer, citations, mode, abstained, flagged_passages}."""
+    """Returns {answer, citations, mode, abstained, warnings, flagged_passages}."""
     question = clean_question(question)
     ranked = retrieve(db, workspace_id, question, k)
     # With the hashing fallback the vector signal is lexical noise: with
@@ -108,31 +119,50 @@ def ask(db, workspace_id: int, question: str, k: Optional[int] = None) -> dict:
     weak = not ranked or ranked[0].strength < _abstain_threshold()
     lexical_gate = (not llm.enabled
                     and backend_name() == HASH_BACKEND_NAME and not has_lexical)
-    if weak or lexical_gate:
-        return {"answer": "I don't have enough evidence in the uploaded "
-                          "documents to answer that. Try adding relevant "
-                          "documents or rephrasing the question.",
-                "citations": [], "mode": llm.mode, "abstained": True,
-                "flagged_passages": 0}
+    scores = [r.rerank_score for r in ranked if hasattr(r, "rerank_score")]
+    unanswerable_by_reranker = bool(scores) and max(scores) < settings.abstain_rerank_threshold
+    if weak or lexical_gate or unanswerable_by_reranker:
+        return _abstain(llm.mode)
 
     citations = [_citation(r) for r in ranked]
-
     flagged = sum(1 for r in ranked if scan(r.chunk.text))
+    warnings: List[str] = []
+    answer, cited, mode = None, [], "offline"
+
     if llm.enabled:
         passages, _ = build_passages_block(
             (i, r.document_name, r.chunk.page, r.chunk.text)
             for i, r in enumerate(ranked))
-        result = llm.complete_json(
-            SYSTEM_PROMPT,
-            f"QUESTION: {question}\n\nPASSAGES:\n{passages}",
-            _AnswerModel)
-        if result is not None and result.answer.strip():
-            used = {i for i in result.used_chunk_ids if 0 <= i < len(ranked)}
-            cited = [c for i, c in enumerate(citations) if i in used] or citations[:2]
-            return {"answer": result.answer.strip()[:4000], "citations": cited,
-                    "mode": "claude", "abstained": False,
-                    "flagged_passages": flagged}
+        try:
+            result = llm.complete_json(
+                SYSTEM_PROMPT,
+                f"QUESTION: {question}\n\nPASSAGES:\n{passages}", _AnswerModel)
+        except LLMError as e:
+            warnings.append(f"Claude was unavailable ({e.kind}); showing the "
+                            "extractive offline answer instead.")
+            result = None
+        if result is not None:
+            used = sorted({i for i in result.used_chunk_ids if 0 <= i < len(ranked)})
+            text, removed = strip_unverified_inline_refs(
+                result.answer, [(r.document_name, r.chunk.page) for r in ranked])
+            if removed:
+                warnings.append(f"Removed {len(removed)} reference(s) in the answer "
+                                "that do not match any retrieved passage.")
+            if result.insufficient_evidence:
+                return _abstain("claude", warnings, flagged)
+            if used and text:
+                answer, cited, mode = text[:4000], [citations[i] for i in used], "claude"
+            else:
+                warnings.append("Claude's answer cited no retrieved passage, so it "
+                                "was discarded and the extractive answer is shown.")
 
-    return {"answer": _offline_answer(question, ranked),
-            "citations": citations[:3], "mode": "offline", "abstained": False,
-            "flagged_passages": flagged}
+    if answer is None:
+        answer, cited = _offline_answer(question, ranked), citations[:3]
+
+    # Last gate: nothing is shown unless it checks out against the database.
+    valid, problems = verify_citations(db, workspace_id, cited)
+    warnings.extend(f"Dropped a citation: {p}" for p in problems)
+    if not valid:
+        return _abstain(mode, warnings + ["No citation could be verified."], flagged)
+    return {"answer": answer, "citations": valid, "mode": mode, "abstained": False,
+            "warnings": warnings, "flagged_passages": flagged}

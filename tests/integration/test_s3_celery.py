@@ -188,3 +188,17 @@ def test_sweep_recovers_job_orphaned_by_dead_worker(celery_worker):
     assert _wait(lambda: SessionLocal().query(IngestionJob).get(j.id).status == "done")
     assert SessionLocal().query(IngestionJob).get(j.id).attempts == 2
     assert SessionLocal().query(Document).get(d.id).status == "done"
+
+
+def test_rate_limit_counts_are_shared_across_processes_via_redis(redis_server):
+    """Two limiter instances (as in two API workers) on one Redis share counts.
+    Uses the same `limits` storage/strategy slowapi builds from RATE_LIMIT_STORAGE."""
+    from slowapi import Limiter
+    mk = lambda: Limiter(key_func=lambda r: "k", storage_uri="redis://127.0.0.1:6391/1")
+    a, b = mk(), mk()
+    from limits import parse
+    item = parse("3/minute")
+    a.limiter.storage.reset()
+    results = [a.limiter.hit(item, "user:1"), b.limiter.hit(item, "user:1"),
+               a.limiter.hit(item, "user:1"), b.limiter.hit(item, "user:1")]
+    assert results == [True, True, True, False]   # 4th hit blocked, from the other worker

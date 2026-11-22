@@ -57,6 +57,8 @@ def rerank(query: str, ranked: list) -> list:
     except Exception as e:  # noqa: BLE001 - never let reranking break a query
         log.warning("cross-encoder scoring failed (%s); keeping RRF order", e)
         return ranked
+    for s_, r in zip(scores, head):
+        r.rerank_score = float(s_)   # also used as an answerability signal (qa.ask)
     reordered = [r for _s, r in sorted(zip(scores, head),
                                        key=lambda t: t[0], reverse=True)]
     return reordered + ranked[settings.rerank_top_n:]

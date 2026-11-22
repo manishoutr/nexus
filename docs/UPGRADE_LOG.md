@@ -71,3 +71,38 @@ No code changed. Found a clean ~880 line layout. Gaps against the target design:
 - Refresh tokens are not revocable (no server-side list) and there is no logout or password reset or email verification.
 - Rate limits were tested with the in-memory store only.
 - The current vanilla-JS UI has no login screen. Anonymous visitors can use the public demo workspace; uploading needs a token. A login UI comes with the React frontend.
+
+
+## Phase 5: AI quality and evaluation
+**Changed**
+- Citation verification (`services/citations.py`): every citation carries `chunk_id`, `document_id`, `document_name`, `page`, `excerpt` and is checked against the database before it is shown: chunk exists, same workspace, belongs to the named document, page matches chunk metadata, name matches the document row, excerpt really is chunk text. Inline references like `[file, page N]` inside an answer are checked against the retrieved passages and removed if they don't match. If no citation survives, the answer becomes an abstention. Duplicate citations collapse.
+- Claude path: the prompt asks for `insufficient_evidence` and `used_chunk_ids` and forbids bracketed references in the text; ids are range-checked; an answer that cites no retrieved passage is discarded in favour of the offline answer, with a warning.
+- LLM failures (`services/llm.py`): classified `LLMError` (timeout, rate_limited, auth, api_error, invalid_output). Timeouts, rate limits and 5xx retry with backoff (3 tries); auth and invalid output don't. `ask` catches the error and falls back to the extractive offline answer with a `warnings` entry. The API never returns a 500 for an LLM failure.
+- Abstention: unchanged evidence-strength gate, plus (when `RERANK_ENABLED=true`) a cross-encoder gate: best passage score below `ABSTAIN_RERANK_THRESHOLD` (-1.5) means not answerable. Claude can also abstain itself. Threshold picked on the dev split only.
+- Evaluation framework (`eval/`): `dataset.jsonl` (44 labelled questions: 22 single-document, 5 paraphrase, 5 multi-document, 7 near-miss unanswerable, 5 unrelated unanswerable; split dev/test), `metrics.py`, `run.py`. Relevance is defined by gold evidence phrases, so metrics survive re-chunking. Metrics: Precision@K, Recall@K, MRR for BM25, vector and hybrid; abstention accuracy with false-abstain and false-answer rates; citation validity and precision; a lexical faithfulness heuristic; answer-covers-evidence. Reports are JSON (`eval/results/report-*.json`); dashboard at `/eval.html`.
+
+**Results** (offline answers, 12 chunks, k=5; `python -m eval.run --backend hash|st [--rerank]`):
+
+| config | MRR | P@5 | R@5 | abstention acc. | wrongly abstained | wrongly answered | abstention acc. (test split) |
+|---|---|---|---|---|---|---|---|
+| hashing embeddings | 0.917 | 0.269 | 0.984 | 0.841 | 0.000 | 0.583 | 0.850 |
+| MiniLM | 0.917 | 0.275 | 1.000 | 0.818 | 0.000 | 0.667 | 0.800 |
+| MiniLM + cross-encoder gate | 0.969 | 0.275 | 1.000 | 0.886 | 0.094 | 0.167 | 0.850 |
+
+- Hybrid beats either method alone on MRR only with MiniLM + reranker (0.969 vs 0.917). With hashing or plain MiniLM, hybrid, BM25 and vector are within noise on this set.
+- Abstention on unrelated questions is solved by the strength gate. Near-miss questions (topical but unanswered in the text) fooled it: 58 to 67% were wrongly answered. The cross-encoder gate cuts that to 17% overall, at the price of wrongly abstaining on 9% of answerable questions (all paraphrases). On the test split accuracy is 85% either way; the threshold sweep is flat in the 80 to 85% band, so the threshold choice is inside the noise of 20 test questions.
+- Weak spots shown on the dashboard: multi-document questions (answer covers 60% of evidence) and paraphrases (50%), because the offline answer is extractive and picks sentences by word overlap.
+
+**Files created:** `app/services/citations.py`, `eval/__init__.py`, `eval/dataset.jsonl`, `eval/metrics.py`, `eval/run.py`, `eval/results/report-{hash,st,st-rerank}.json`, `app/static/eval.html`, `app/static/eval/report-*.json`, `tests/test_ai_quality.py`, `tests/test_eval.py`, `tests/test_rerank.py`
+**Files modified:** `services/llm.py`, `services/qa.py`, `services/rerank.py`, `services/safety.py`, `schemas.py`, `config.py`, `auth.py` (production JWT check), `tests/test_security.py`, `tests/integration/test_s3_celery.py`
+**Removed:** none
+
+**Also in this change (parent request after Phase 4):** `APP_ENV=production` now refuses to start unless `JWT_SECRET` is at least 32 characters; development keeps the random fallback. New tests: public demo workspace write attempts (anonymous 401, other user 403) on documents/members; two limiter instances sharing a real Redis share counts (tests the `limits` storage the limiter uses, not a two-process HTTP run).
+
+**Tests:** 85 passed (`pytest tests`, includes integration). New: 11 AI-quality tests (each kind of bad citation, fabricated inline reference, Claude timeout with 3 attempts then offline fallback, rate limit then success, auth and invalid-output not retried, fenced JSON, Claude abstention, ghost citation dropped, no-evidence question), 5 eval tests (metric maths by hand, dataset integrity, eval run reproducible and deterministic), 4 reranker tests against the real cross-encoder (orders the answering passage first, fails open when the model is unavailable or scoring raises).
+
+**Not proven / limits**
+- No real Claude call was ever made; all Claude-path tests use a fake client. The LLM-failure handling is tested against exception shapes, not the live API.
+- The dataset is small and written by the developer after reading the three seed documents, with only 12 chunks, so R@5 is close to trivially high and P@5 is capped by chunk overlap. Differences between configurations are mostly within noise.
+- The faithfulness metric is lexical and the offline answer is extractive, so it is near 1.0 by construction. It becomes informative only with Claude.
+- The reranker needs a second model download (about 90 MB) and torch.

@@ -30,6 +30,11 @@ ROLE_RANK = {"viewer": 1, "editor": 2, "owner": 3}
 ALGORITHM = "HS256"
 
 _secret = settings.jwt_secret
+if settings.app_env in ("production", "prod"):
+    if not _secret or len(_secret) < 32:
+        raise RuntimeError(
+            "APP_ENV=production requires JWT_SECRET with at least 32 characters "
+            "(e.g. `python -c \"import secrets; print(secrets.token_urlsafe(48))\"`)")
 if not _secret:
     _secret = secrets.token_urlsafe(48)
     log.warning("JWT_SECRET is not set: using a random per-process secret. "

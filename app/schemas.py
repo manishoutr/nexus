@@ -82,6 +82,7 @@ class AskRequest(BaseModel):
 
 
 class Citation(BaseModel):
+    chunk_id: int
     document_id: int
     document_name: str
     page: int
@@ -94,4 +95,5 @@ class AskResponse(BaseModel):
     citations: List[Citation] = Field(default_factory=list)
     mode: str
     abstained: bool
+    warnings: List[str] = Field(default_factory=list)  # e.g. Claude failed, fell back
     flagged_passages: int = 0   # retrieved passages that looked like injected instructions

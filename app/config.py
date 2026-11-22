@@ -24,6 +24,9 @@ class Settings:
         self.job_stale_after_s = float(os.getenv("JOB_STALE_AFTER_S", "300"))
         # Auth. JWT_SECRET must be set in production; without it a random
         # per-process secret is generated (tokens die on restart).
+        # APP_ENV=production makes startup fail unless JWT_SECRET is set and
+        # long enough. development (the default) allows a random fallback.
+        self.app_env = os.getenv("APP_ENV", "development").lower()
         self.jwt_secret = os.getenv("JWT_SECRET") or None
         self.access_token_minutes = int(os.getenv("ACCESS_TOKEN_MINUTES", "30"))
         self.refresh_token_days = int(os.getenv("REFRESH_TOKEN_DAYS", "7"))
@@ -57,6 +60,11 @@ class Settings:
         # a shared content word (see qa.ask). The sentence-transformers value
         # is calibrated on the seed set in tests/test_retrieval.py.
         self.abstain_threshold = float(os.getenv("ABSTAIN_THRESHOLD", "0.15"))
+        # With the reranker on, a cross-encoder score below this for the best
+        # passage also means "not answerable". Chosen on the dev split of
+        # eval/dataset.jsonl (see docs/UPGRADE_LOG.md); small data, so treat
+        # it as a starting point, not a calibrated constant.
+        self.abstain_rerank_threshold = float(os.getenv("ABSTAIN_RERANK_THRESHOLD", "-1.5"))
         self.abstain_threshold_st = float(os.getenv("ABSTAIN_THRESHOLD_ST", "0.30"))
 
     @property
