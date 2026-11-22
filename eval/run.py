@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def parse() -> argparse.Namespace:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--backend", choices=["hash", "st"], default="hash")
+    ap.add_argument("--backend", choices=["hash", "st", "onnx"], default="hash")
     ap.add_argument("--k", type=int, default=5)
     ap.add_argument("--rerank", action="store_true", help="enable the cross-encoder reranker + its abstention gate")
     ap.add_argument("--publish", action="store_true")

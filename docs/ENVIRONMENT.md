@@ -13,7 +13,7 @@ All settings are environment variables read in `app/config.py`. `.env.example` l
 | `STORAGE_BACKEND` | local | `s3` uses boto3; set `S3_ENDPOINT_URL` for MinIO, leave empty for AWS |
 | `S3_BUCKET`, `AWS_REGION` | nexus-documents, us-east-1 | Credentials via the standard AWS variables |
 | `ANTHROPIC_API_KEY`, `LLM_MODE` | none, auto | No key = offline extractive answers (the UI says so) |
-| `EMBEDDING_BACKEND` | auto | `hash` (no ML deps), `st` (sentence-transformers), `auto` picks st if installed |
+| `EMBEDDING_BACKEND` | auto | `hash` (no ML deps), `st` (sentence-transformers, needs torch), `onnx` (same model via onnxruntime, no torch, `requirements-onnx.txt`), `auto` tries st, then onnx, then hash |
 | `RERANK_ENABLED` | false | Cross-encoder reranker, needs sentence-transformers |
 | `LOG_FORMAT`, `LOG_LEVEL` | text, INFO | `json` for log shippers |
 
@@ -21,8 +21,18 @@ All settings are environment variables read in `app/config.py`. `.env.example` l
 - PostgreSQL with pgvector (the `pgvector/pgvector:pg16` image, or a host that offers the extension).
 - Redis, if you use Celery.
 - An S3 bucket (AWS) or MinIO, if you use S3 storage. Local disk is ephemeral on most free hosts.
-- RAM: the hashing build is small. The sentence-transformers build pulls torch and needs roughly 1 GB or more
-  (not measured here; render's free tier is 512 MB, so it is expected not to fit).
+- RAM, measured locally (peak resident memory of one process that loaded the embedder and embedded 40 texts):
+  hashing 14 MB, ONNX MiniLM 203 MB, sentence-transformers MiniLM 476 MB (embedder alone, before the API, database
+  driver and request handling). The API import alone is about 109 MB. So the torch path is not expected to fit
+  Render's 512 MB free tier; the ONNX path might. **These are local measurements, not measurements on Render.**
+
+## ONNX versus sentence-transformers
+`scripts/onnx_parity.py` embeds 30 corpus paragraphs and 56 eval questions with both paths. Result: cosine 1.000000
+(minimum and mean), largest component difference 2.1e-07, and the top-5 retrieval order was identical for 56 of 56
+questions. The full evaluation with `--backend onnx` gives exactly the same report numbers as `--backend st`
+(without the reranker). Because the vectors match, both backends record the same model name and can share an index.
+The cross-encoder reranker still needs torch, so the ONNX path has no reranker and no reranker abstention gate; with
+the ONNX path abstention accuracy is the 78.6% (test 75.0%) row of the evaluation table, not the 89.3% row.
 
 ## Docker
 `docker-compose.yml` defines api, worker, beat, db, redis and minio (the app creates the bucket itself).

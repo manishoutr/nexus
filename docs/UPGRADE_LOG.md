@@ -132,3 +132,7 @@ No code changed. Found a clean ~880 line layout. Gaps against the target design:
 - Docs: README rewritten with a verified/unverified table, `docs/API.md`, `docs/ARCHITECTURE.md` (mermaid diagram), `docs/ENVIRONMENT.md`.
 - **CI on GitHub (real run, commit dc37d19):** lint, test-sqlite, test-postgres (pgvector service container) and frontend all passed. First push failed: `alembic` was never added to `requirements.txt` (my venv had it). A clean-venv run reproduced it; fixed. This also would have broken the Docker image and any deploy.
 - Not verified: Docker build/run, real Claude, AWS S3, live deploy of this build.
+
+## Phase 7b: ONNX backend, Docker smoke diagnosis
+- `OnnxBackend` (`EMBEDDING_BACKEND=onnx`, `requirements-onnx.txt`): the same MiniLM weights via onnxruntime. Parity measured with `scripts/onnx_parity.py`: cosine 1.000000, max component diff 2.1e-07, top-5 order identical on 56/56 questions; evaluation report identical to the torch path. 3 tests (skip without the packages or the model download). Local peak memory: ONNX 203 MB, torch MiniLM 476 MB, hashing 14 MB. No reranker on this path.
+- Docker smoke job on GitHub failed in 5 s: `pull access denied for minio/mc`. Cause found by reading the job log in the browser. Fix (committed, not yet pushed): removed the unneeded `minio-init` service (the app creates its bucket), MinIO from `quay.io/minio/minio`. Compose and Docker build are still unexercised until a clean smoke run passes.

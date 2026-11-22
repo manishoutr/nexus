@@ -1,0 +1,2589 @@
+{
+  "meta": {
+    "generated_at": "2026-11-22T13:56:43+00:00",
+    "git_commit": "18da2a7",
+    "embedding_backend": "sentence-transformers/all-MiniLM-L6-v2",
+    "answer_mode": "offline (extractive, no LLM)",
+    "k": 5,
+    "reranker": "off",
+    "abstain_rerank_threshold": null,
+    "chunks": 22,
+    "abstain_threshold": 0.3,
+    "dataset_sha256": "937fc04239ca0953",
+    "notes": [
+      "Dataset is small and written by the developer after reading the three seed documents.",
+      "faithfulness_heuristic is lexical support of answer sentences in cited chunks; offline answers are extractive so it is near 1.0 by construction.",
+      "Claude answer mode was not evaluated (no API key)."
+    ]
+  },
+  "overall": {
+    "questions": 56,
+    "answerable": 40,
+    "unanswerable": 16,
+    "retrieval": {
+      "bm25": {
+        "mrr": 0.9333,
+        "p@1": 0.875,
+        "p@3": 0.4333,
+        "p@5": 0.265,
+        "r@1": 0.8125,
+        "r@3": 0.975,
+        "r@5": 0.9875
+      },
+      "vector": {
+        "mrr": 0.8917,
+        "p@1": 0.8,
+        "p@3": 0.4333,
+        "p@5": 0.27,
+        "r@1": 0.7375,
+        "r@3": 0.9625,
+        "r@5": 0.9875
+      },
+      "hybrid_rrf": {
+        "mrr": 0.9083,
+        "p@1": 0.825,
+        "p@3": 0.425,
+        "p@5": 0.275,
+        "r@1": 0.7625,
+        "r@3": 0.9625,
+        "r@5": 1.0
+      }
+    },
+    "abstention": {
+      "accuracy": 0.7857,
+      "false_abstain_rate": 0.0,
+      "false_answer_rate": 0.75,
+      "n": 56
+    },
+    "citation_validity": 1.0,
+    "citation_precision": 0.425,
+    "citation_evidence_coverage": 0.9625,
+    "answer_evidence_coverage": 0.8,
+    "faithfulness_heuristic": 1.0
+  },
+  "dev": {
+    "questions": 24,
+    "answerable": 17,
+    "unanswerable": 7,
+    "retrieval": {
+      "bm25": {
+        "mrr": 0.9412,
+        "p@1": 0.8824,
+        "p@3": 0.4706,
+        "p@5": 0.2824,
+        "r@1": 0.7941,
+        "r@3": 0.9706,
+        "r@5": 0.9706
+      },
+      "vector": {
+        "mrr": 0.9706,
+        "p@1": 0.9412,
+        "p@3": 0.4706,
+        "p@5": 0.2941,
+        "r@1": 0.8529,
+        "r@3": 0.9706,
+        "r@5": 1.0
+      },
+      "hybrid_rrf": {
+        "mrr": 0.9412,
+        "p@1": 0.8824,
+        "p@3": 0.4706,
+        "p@5": 0.2941,
+        "r@1": 0.7941,
+        "r@3": 0.9706,
+        "r@5": 1.0
+      }
+    },
+    "abstention": {
+      "accuracy": 0.8333,
+      "false_abstain_rate": 0.0,
+      "false_answer_rate": 0.5714,
+      "n": 24
+    },
+    "citation_validity": 1.0,
+    "citation_precision": 0.4706,
+    "citation_evidence_coverage": 0.9706,
+    "answer_evidence_coverage": 0.9118,
+    "faithfulness_heuristic": 1.0
+  },
+  "test": {
+    "questions": 32,
+    "answerable": 23,
+    "unanswerable": 9,
+    "retrieval": {
+      "bm25": {
+        "mrr": 0.9275,
+        "p@1": 0.8696,
+        "p@3": 0.4058,
+        "p@5": 0.2522,
+        "r@1": 0.8261,
+        "r@3": 0.9783,
+        "r@5": 1.0
+      },
+      "vector": {
+        "mrr": 0.8333,
+        "p@1": 0.6957,
+        "p@3": 0.4058,
+        "p@5": 0.2522,
+        "r@1": 0.6522,
+        "r@3": 0.9565,
+        "r@5": 0.9783
+      },
+      "hybrid_rrf": {
+        "mrr": 0.8841,
+        "p@1": 0.7826,
+        "p@3": 0.3913,
+        "p@5": 0.2609,
+        "r@1": 0.7391,
+        "r@3": 0.9565,
+        "r@5": 1.0
+      }
+    },
+    "abstention": {
+      "accuracy": 0.75,
+      "false_abstain_rate": 0.0,
+      "false_answer_rate": 0.8889,
+      "n": 32
+    },
+    "citation_validity": 1.0,
+    "citation_precision": 0.3913,
+    "citation_evidence_coverage": 0.9565,
+    "answer_evidence_coverage": 0.7174,
+    "faithfulness_heuristic": 1.0
+  },
+  "by_type": {
+    "single": {
+      "questions": 27,
+      "answerable": 27,
+      "unanswerable": 0,
+      "retrieval": {
+        "bm25": {
+          "mrr": 0.9383,
+          "p@1": 0.8889,
+          "p@3": 0.3827,
+          "p@5": 0.2296,
+          "r@1": 0.8889,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 0.8642,
+          "p@1": 0.7407,
+          "p@3": 0.3827,
+          "p@5": 0.2296,
+          "r@1": 0.7407,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 0.9074,
+          "p@1": 0.8148,
+          "p@3": 0.3827,
+          "p@5": 0.2296,
+          "r@1": 0.8148,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "abstention": {
+        "accuracy": 1.0,
+        "false_abstain_rate": 0.0,
+        "false_answer_rate": 0.0,
+        "n": 27
+      },
+      "citation_validity": 1.0,
+      "citation_precision": 0.3827,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 0.963,
+      "faithfulness_heuristic": 1.0
+    },
+    "paraphrase": {
+      "questions": 7,
+      "answerable": 7,
+      "unanswerable": 0,
+      "retrieval": {
+        "bm25": {
+          "mrr": 0.9286,
+          "p@1": 0.8571,
+          "p@3": 0.4286,
+          "p@5": 0.2571,
+          "r@1": 0.8571,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.4762,
+          "p@5": 0.2857,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 0.9286,
+          "p@1": 0.8571,
+          "p@3": 0.4286,
+          "p@5": 0.2857,
+          "r@1": 0.8571,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "abstention": {
+        "accuracy": 1.0,
+        "false_abstain_rate": 0.0,
+        "false_answer_rate": 0.0,
+        "n": 7
+      },
+      "citation_validity": 1.0,
+      "citation_precision": 0.4286,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 0.4286,
+      "faithfulness_heuristic": 1.0
+    },
+    "multi": {
+      "questions": 6,
+      "answerable": 6,
+      "unanswerable": 0,
+      "retrieval": {
+        "bm25": {
+          "mrr": 0.9167,
+          "p@1": 0.8333,
+          "p@3": 0.6667,
+          "p@5": 0.4333,
+          "r@1": 0.4167,
+          "r@3": 0.8333,
+          "r@5": 0.9167
+        },
+        "vector": {
+          "mrr": 0.8889,
+          "p@1": 0.8333,
+          "p@3": 0.6111,
+          "p@5": 0.4333,
+          "r@1": 0.4167,
+          "r@3": 0.75,
+          "r@5": 0.9167
+        },
+        "hybrid_rrf": {
+          "mrr": 0.8889,
+          "p@1": 0.8333,
+          "p@3": 0.6111,
+          "p@5": 0.4667,
+          "r@1": 0.4167,
+          "r@3": 0.75,
+          "r@5": 1.0
+        }
+      },
+      "abstention": {
+        "accuracy": 1.0,
+        "false_abstain_rate": 0.0,
+        "false_answer_rate": 0.0,
+        "n": 6
+      },
+      "citation_validity": 1.0,
+      "citation_precision": 0.6111,
+      "citation_evidence_coverage": 0.75,
+      "answer_evidence_coverage": 0.5,
+      "faithfulness_heuristic": 1.0
+    },
+    "unanswerable_near": {
+      "questions": 11,
+      "answerable": 0,
+      "unanswerable": 11,
+      "retrieval": {
+        "bm25": {},
+        "vector": {},
+        "hybrid_rrf": {}
+      },
+      "abstention": {
+        "accuracy": 0.0,
+        "false_abstain_rate": 0.0,
+        "false_answer_rate": 1.0,
+        "n": 11
+      },
+      "citation_validity": 1.0,
+      "citation_precision": 0.0,
+      "citation_evidence_coverage": 0.0,
+      "answer_evidence_coverage": 0.0,
+      "faithfulness_heuristic": 1.0
+    },
+    "unanswerable_far": {
+      "questions": 5,
+      "answerable": 0,
+      "unanswerable": 5,
+      "retrieval": {
+        "bm25": {},
+        "vector": {},
+        "hybrid_rrf": {}
+      },
+      "abstention": {
+        "accuracy": 0.8,
+        "false_abstain_rate": 0.0,
+        "false_answer_rate": 0.2,
+        "n": 5
+      },
+      "citation_validity": 1.0,
+      "citation_precision": 0.0,
+      "citation_evidence_coverage": 0.0,
+      "answer_evidence_coverage": 0.0,
+      "faithfulness_heuristic": 1.0
+    }
+  },
+  "threshold_sweep": [
+    {
+      "threshold": 0.05,
+      "dev": 0.7917,
+      "test": 0.7188
+    },
+    {
+      "threshold": 0.1,
+      "dev": 0.8333,
+      "test": 0.7188
+    },
+    {
+      "threshold": 0.15,
+      "dev": 0.8333,
+      "test": 0.7188
+    },
+    {
+      "threshold": 0.2,
+      "dev": 0.8333,
+      "test": 0.7188
+    },
+    {
+      "threshold": 0.25,
+      "dev": 0.8333,
+      "test": 0.7188
+    },
+    {
+      "threshold": 0.3,
+      "dev": 0.8333,
+      "test": 0.7188
+    },
+    {
+      "threshold": 0.35,
+      "dev": 0.8333,
+      "test": 0.7188
+    },
+    {
+      "threshold": 0.4,
+      "dev": 0.8333,
+      "test": 0.7188
+    },
+    {
+      "threshold": 0.5,
+      "dev": 0.8333,
+      "test": 0.7188
+    }
+  ],
+  "rerank_threshold_sweep": [],
+  "failures": [
+    {
+      "id": "q33",
+      "type": "unanswerable_near",
+      "question": "What is the price of a Sambalpuri saree?",
+      "abstained": false,
+      "top_strength": 0.7184,
+      "answer": "Based on the retrieved passages:\n\nA single Sambalpuri saree can take one to two weeks to weave by hand, depending on the complexity of the pattern. [odisha-handlooms.txt]\n\nSambalpuri Textiles The Sambalpuri saree is the best-known product of this tradition. [odisha-handlooms.txt]\n\nGeographical Indication Sambalpuri bandha textiles hold a Geographical Indication tag, which recognises their link to the region and protects the name against [odisha-handlooms.txt]"
+    },
+    {
+      "id": "q34",
+      "type": "unanswerable_near",
+      "question": "Who is the mayor of Bhubaneswar?",
+      "abstained": false,
+      "top_strength": 0.7303,
+      "answer": "Based on the retrieved passages:\n\nBhubaneswar Smart City Mission Bhubaneswar, the capital of Odisha, was ranked first among the twenty lighthouse cities selected in the first round of India's Smart Cities Mission in 2016. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]"
+    },
+    {
+      "id": "q35",
+      "type": "unanswerable_near",
+      "question": "How many parameters does the embedding model have?",
+      "abstained": false,
+      "top_strength": 0.5646,
+      "answer": "Based on the retrieved passages:\n\nVector methods rank chunks by embedding similarity, which can catch paraphrases. [retrieval-augmented-generation.pdf, page 1]\n\nGeneration The retrieved chunks are passed to the language model inside its prompt, with instructions to answer only from that evidence. [retrieval-augmented-generation.pdf, page 1]\n\nBoth have settings that move the balance between speed and recall. [vector-databases.txt]"
+    },
+    {
+      "id": "q36",
+      "type": "unanswerable_near",
+      "question": "Which vector database should be used for indexing?",
+      "abstained": false,
+      "top_strength": 0.8269,
+      "answer": "Based on the retrieved passages:\n\nVector search in databases A vector index stores embeddings so that the nearest ones to a query vector can be found without comparing every row. [vector-databases.txt]\n\nOthers add vector types to an existing relational database, so embeddings sit next to ordinary columns and can be filtered with normal SQL. [vector-databases.txt]\n\nExact search scans all vectors and gives perfect recall, but its cost grows linearly with the number of rows. [vector-databases.txt]"
+    },
+    {
+      "id": "q37",
+      "type": "unanswerable_near",
+      "question": "In which year was the Geographical Indication tag granted?",
+      "abstained": false,
+      "top_strength": 0.5824,
+      "answer": "Based on the retrieved passages:\n\nGeographical Indication Sambalpuri bandha textiles hold a Geographical Indication tag, which recognises their link to the region and protects the name against [odisha-handlooms.txt]\n\ndha textiles hold a Geographical Indication tag, which recognises their link to the region and protects the name against machine-made imitations sold under the same label. [odisha-handlooms.txt]\n\nBhubaneswar Smart City Mission Bhubaneswar, the capital of Odisha, was ranked first among the twenty lighthouse cities selected in the first round of India's Smart Cities Mission in 2016. [bhubaneswar-smart-city.docx]"
+    },
+    {
+      "id": "q38",
+      "type": "unanswerable_near",
+      "question": "How much money did the Smart Cities Mission spend in Bhubaneswar?",
+      "abstained": false,
+      "top_strength": 0.7883,
+      "answer": "Based on the retrieved passages:\n\nBhubaneswar Smart City Mission Bhubaneswar, the capital of Odisha, was ranked first among the twenty lighthouse cities selected in the first round of India's Smart Cities Mission in 2016. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]"
+    },
+    {
+      "id": "q39",
+      "type": "unanswerable_near",
+      "question": "What is the population of Cuttack?",
+      "abstained": false,
+      "top_strength": 0.6195,
+      "answer": "Based on the retrieved passages:\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]"
+    },
+    {
+      "id": "q43",
+      "type": "unanswerable_far",
+      "question": "What is the boiling point of water at sea level?",
+      "abstained": false,
+      "top_strength": 0.5748,
+      "answer": "Based on the retrieved passages:\n\nThat makes it possible to run a local S3-compatible server for development and tests, then point the same client code at a hosted bucket by changing the endpoint and credentials. [object-storage.txt]"
+    },
+    {
+      "id": "q53",
+      "type": "unanswerable_near",
+      "question": "How much does S3 storage cost per gigabyte per month?",
+      "abstained": false,
+      "top_strength": 0.6624,
+      "answer": "Based on the retrieved passages:\n\nObject storage basics Object storage keeps files as objects inside buckets. [object-storage.txt]\n\nThat makes it possible to run a local S3-compatible server for development and tests, then point the same client code at a hosted bucket by changing the endpoint and credentials. [object-storage.txt]\n\nExact search scans all vectors and gives perfect recall, but its cost grows linearly with the number of rows. [vector-databases.txt]"
+    },
+    {
+      "id": "q54",
+      "type": "unanswerable_near",
+      "question": "How many pilgrims attend the Rath Yatra each year?",
+      "abstained": false,
+      "top_strength": 0.6849,
+      "answer": "Based on the retrieved passages:\n\nPuri has the Jagannath temple, which is the centre of the yearly Rath Yatra, when the three deities are pulled through the main avenue on large wooden chariots. [odisha-temples.txt]\n\nMany other services copy the same API. [object-storage.txt]"
+    },
+    {
+      "id": "q55",
+      "type": "unanswerable_near",
+      "question": "What is the default HNSW ef_construction value?",
+      "abstained": false,
+      "top_strength": 0.5387,
+      "answer": "Based on the retrieved passages:\n\nHNSW builds a layered graph of neighbours and walks it from the top layer down. [vector-databases.txt]\n\nBuckets should be private by default, and access is granted with policies. [object-storage.txt]\n\nBuckets should be private by default, and access is granted with policies. [object-storage.txt]"
+    },
+    {
+      "id": "q56",
+      "type": "unanswerable_near",
+      "question": "What is the minimum support price of rice?",
+      "abstained": false,
+      "top_strength": 0.6347,
+      "answer": "Based on the retrieved passages:\n\nCrop insurance and minimum support prices are central government schemes that farmers can use to lower the risk. [monsoon-and-farming.txt]\n\nFarmers sow the kharif crop at its start, and rice is the main one. [monsoon-and-farming.txt]"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q01",
+      "type": "single",
+      "split": "dev",
+      "question": "What are the three stages of retrieval-augmented generation?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.8275,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nThe pattern has three stages: indexing, retrieval and generation. [retrieval-augmented-generation.pdf, page 1]\n\nRetrieval-Augmented Generation Retrieval-augmented generation, usually shortened to RAG, is an architecture pattern where a language model answers questions using passages fetched from a document store, instead of relying only on what it memorised during training. [retrieval-augmented-generation.pdf, page 1]\n\nHybrid retrieval combines both rankings, because keyword search is precise for names and rare terms while vector search tolerates rewording. [retrieval-augmented-generation.pdf, page 1]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q02",
+      "type": "single",
+      "split": "test",
+      "question": "What is a chunk in a RAG system?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 0.3333333333333333,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6195,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nA well-behaved RAG system cites the chunks it used, so a reader can verify every claim against the source. [retrieval-augmented-generation.pdf, page 1]\n\nA well-behaved RAG system cites the chunks it used, so a reader can verify every claim against the source. [retrieval-augmented-generation.pdf, page 1]\n\nWhen no chunk contains the answer, the system should abstain rather than invent a plausible-sounding reply. [retrieval-augmented-generation.pdf, page 1]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 0.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q03",
+      "type": "single",
+      "split": "dev",
+      "question": "Which retrieval method ranks chunks by exact term matches and term rarity?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.8504,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nKeyword methods such as BM25 rank chunks by exact term matches and term rarity. [retrieval-augmented-generation.pdf, page 1]\n\nby exact term matches and term rarity. [retrieval-augmented-generation.pdf, page 1]\n\nVector methods rank chunks by embedding similarity, which can catch paraphrases. [retrieval-augmented-generation.pdf, page 1]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q04",
+      "type": "single",
+      "split": "test",
+      "question": "Why does hybrid retrieval combine keyword and vector search?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.868,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nHybrid retrieval combines both rankings, because keyword search is precise for names and rare terms while vector search tolerates rewording. [retrieval-augmented-generation.pdf, page 1]\n\nVector search in databases A vector index stores embeddings so that the nearest ones to a query vector can be found without comparing every row. [vector-databases.txt]\n\nExact search scans all vectors and gives perfect recall, but its cost grows linearly with the number of rows. [vector-databases.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q05",
+      "type": "single",
+      "split": "dev",
+      "question": "How can two ranked lists be merged?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7119,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nMerging two ranked lists is typically done with score normalisation or reciprocal rank fusion. [retrieval-augmented-generation.pdf, page 1]\n\nIVF splits the space into lists and searches only the lists closest to the query. [vector-databases.txt]\n\nEach chunk is converted into a vector, a list of numbers that captures its lexical or semantic content, and stored in a searchable index alongside metadata such as the source document and page number. [retrieval-augmented-generation.pdf, page 1]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q06",
+      "type": "single",
+      "split": "test",
+      "question": "What should a RAG system do when no chunk contains the answer?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.741,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nWhen no chunk contains the answer, the system should abstain rather than invent a plausible-sounding reply. [retrieval-augmented-generation.pdf, page 1]\n\nA well-behaved RAG system cites the chunks it used, so a reader can verify every claim against the source. [retrieval-augmented-generation.pdf, page 1]\n\nA well-behaved RAG system cites the chunks it used, so a reader can verify every claim against the source. [retrieval-augmented-generation.pdf, page 1]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q07",
+      "type": "single",
+      "split": "dev",
+      "question": "How is retrieval quality measured?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7766,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nEvaluation Retrieval quality is measured with recall at k, the fraction of questions whose supporting passage appears in the top k results, and with ranking metrics such as NDCG. [retrieval-augmented-generation.pdf, page 1]\n\nAnswer quality is measured by checking whether each [retrieval-augmented-generation.pdf, page 1]\n\nAnswer quality is measured by checking whether each claim is supported by the cited passage and whether the system abstains when it should. [retrieval-augmented-generation.pdf, page 1]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q08",
+      "type": "single",
+      "split": "test",
+      "question": "What metadata is stored alongside each vector?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6738,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nEach chunk is converted into a vector, a list of numbers that captures its lexical or semantic content, and stored in a searchable index alongside metadata such as the source document and page number. [retrieval-augmented-generation.pdf, page 1]\n\nVector methods rank chunks by embedding similarity, which can catch paraphrases. [retrieval-augmented-generation.pdf, page 1]\n\nVector search in databases A vector index stores embeddings so that the nearest ones to a query vector can be found without comparing every row. [vector-databases.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q09",
+      "type": "single",
+      "split": "dev",
+      "question": "What is ikat called locally in Odisha?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.8121,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nHandloom Traditions of Odisha Odisha has a long handloom tradition centred on the ikat technique, known locally as bandha. [odisha-handlooms.txt]\n\nIn ikat weaving, the threads are tie-dyed before weaving, so the pattern is created in the yarn itself rather than printed on finished cloth. [odisha-handlooms.txt]\n\nMonsoon and farming in Odisha Most of the rain in Odisha arrives between June and September with the south-west monsoon. [monsoon-and-farming.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q10",
+      "type": "single",
+      "split": "test",
+      "question": "Which districts weave the Sambalpuri saree?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7838,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nA single Sambalpuri saree can take one to two weeks to weave by hand, depending on the complexity of the pattern. [odisha-handlooms.txt]\n\nSambalpuri Textiles The Sambalpuri saree is the best-known product of this tradition. [odisha-handlooms.txt]\n\nIt is woven in the districts around Sambalpur, Bargarh and Sonepur in western Odisha. [odisha-handlooms.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q11",
+      "type": "single",
+      "split": "dev",
+      "question": "Which motifs are common on Sambalpuri sarees?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.811,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nCommon motifs include the shankha or conch shell, the chakra or wheel, and the phula or flower, all drawn from the iconography of the Jagannath culture. [odisha-handlooms.txt]\n\nSambalpuri Textiles The Sambalpuri saree is the best-known product of this tradition. [odisha-handlooms.txt]\n\nA single Sambalpuri saree can take one to two weeks to weave by hand, depending on the complexity of the pattern. [odisha-handlooms.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q12",
+      "type": "single",
+      "split": "test",
+      "question": "Which communities are traditional weavers of the region?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7138,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nWeaving Communities The Bhulia and Meher communities are traditional weavers of the region. [odisha-handlooms.txt]\n\nDesigners now work with weavers to adapt traditional motifs to contemporary garments while keeping the handwoven process intact. [odisha-handlooms.txt]\n\nGeographical Indication Sambalpuri bandha textiles hold a Geographical Indication tag, which recognises their link to the region and protects the name against [odisha-handlooms.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q13",
+      "type": "single",
+      "split": "dev",
+      "question": "How long does one Sambalpuri saree take to weave?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.8549,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nA single Sambalpuri saree can take one to two weeks to weave by hand, depending on the complexity of the pattern. [odisha-handlooms.txt]\n\nSambalpuri Textiles The Sambalpuri saree is the best-known product of this tradition. [odisha-handlooms.txt]\n\nBoth the warp and the weft may be tie-dyed, in which case the weave is called double ikat. [odisha-handlooms.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q14",
+      "type": "single",
+      "split": "test",
+      "question": "What is double ikat?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6766,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nHandloom Traditions of Odisha Odisha has a long handloom tradition centred on the ikat technique, known locally as bandha. [odisha-handlooms.txt]\n\nIn ikat weaving, the threads are tie-dyed before weaving, so the pattern is created in the yarn itself rather than printed on finished cloth. [odisha-handlooms.txt]\n\nBoth the warp and the weft may be tie-dyed, in which case the weave is called double ikat. [odisha-handlooms.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q15",
+      "type": "single",
+      "split": "dev",
+      "question": "What does the Geographical Indication tag recognise?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6073,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nGeographical Indication Sambalpuri bandha textiles hold a Geographical Indication tag, which recognises their link to the region and protects the name against [odisha-handlooms.txt]\n\ndha textiles hold a Geographical Indication tag, which recognises their link to the region and protects the name against machine-made imitations sold under the same label. [odisha-handlooms.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.6666666666666666,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q16",
+      "type": "single",
+      "split": "test",
+      "question": "Where did Bhubaneswar rank among the lighthouse cities?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7636,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nBhubaneswar Smart City Mission Bhubaneswar, the capital of Odisha, was ranked first among the twenty lighthouse cities selected in the first round of India's Smart Cities Mission in 2016. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q17",
+      "type": "single",
+      "split": "dev",
+      "question": "What is the Odyssey card?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6522,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nKey Projects The city introduced a common payment card called the Odyssey card for its Mo Bus public transport service. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q18",
+      "type": "single",
+      "split": "test",
+      "question": "Which neighbouring cities does the Mo Bus network connect?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6838,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nBhubaneswar Smart City Mission Bhubaneswar, the capital of Odisha, was ranked first among the twenty lighthouse cities selected in the first round of India's Smart Cities Mission in 2016. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.6666666666666666,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q19",
+      "type": "single",
+      "split": "dev",
+      "question": "What is the Mo Cycle programme?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7006,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nPublic bicycle sharing under the Mo Cycle programme was launched to encourage short trips without motor vehicles. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nKey Projects The city introduced a common payment card called the Odyssey card for its Mo Bus public transport service. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.6666666666666666,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q20",
+      "type": "single",
+      "split": "test",
+      "question": "What does the integrated command and control centre monitor?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.607,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nTechnology Initiatives The Bhubaneswar Smart City Limited special-purpose vehicle set up an integrated command and control centre. [bhubaneswar-smart-city.docx]\n\nThe centre monitors traffic cameras, manages adaptive traffic signals and coordinates emergency response. [bhubaneswar-smart-city.docx]\n\nCitizen Engagement The mission ran a citizen engagement programme called the Bhubaneswar Town Centre District project, which redesigned public spaces around Master Canteen Square. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q21",
+      "type": "single",
+      "split": "dev",
+      "question": "Which square was redesigned in the Town Centre District project?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.747,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nCitizen Engagement The mission ran a citizen engagement programme called the Bhubaneswar Town Centre District project, which redesigned public spaces around Master Canteen Square. [bhubaneswar-smart-city.docx]\n\nResidents participated through surveys and design workshops to choose how streets and squares were rebuilt. [bhubaneswar-smart-city.docx]\n\nPublic bicycle sharing under the Mo Cycle programme was launched to encourage short trips without motor vehicles. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q22",
+      "type": "single",
+      "split": "test",
+      "question": "What challenge do observers note after mission funding ends?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 0.3333333333333333,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6009,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nChallenges Observers noted that maintaining smart infrastructure after mission funding ends is a challenge. [bhubaneswar-smart-city.docx]\n\nning smart infrastructure after mission funding ends is a challenge. [bhubaneswar-smart-city.docx]\n\nr the task ends, so a task is run again if the worker dies half way. [task-queues.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q23",
+      "type": "paraphrase",
+      "split": "dev",
+      "question": "How do grounded systems avoid making things up when they lack information?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6884,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nA well-behaved RAG system cites the chunks it used, so a reader can verify every claim against the source. [retrieval-augmented-generation.pdf, page 1]\n\nWhen no chunk contains the answer, the system should abstain rather than invent a plausible-sounding reply. [retrieval-augmented-generation.pdf, page 1]\n\nAbstention is the main defence against hallucination in grounded systems. [retrieval-augmented-generation.pdf, page 1]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q24",
+      "type": "paraphrase",
+      "split": "test",
+      "question": "Which patterns on western Odisha fabrics come from temple culture?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.8492,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nTemples of Odisha Odisha is known for three temple clusters. [odisha-temples.txt]\n\nHandloom Traditions of Odisha Odisha has a long handloom tradition centred on the ikat technique, known locally as bandha. [odisha-handlooms.txt]\n\nIn ikat weaving, the threads are tie-dyed before weaving, so the pattern is created in the yarn itself rather than printed on finished cloth. [odisha-handlooms.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 0.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q25",
+      "type": "paraphrase",
+      "split": "dev",
+      "question": "Is there free internet access in the busy shopping areas of the city?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6853,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nFree public Wi-Fi hotspots were installed in busy market areas and along major roads. [bhubaneswar-smart-city.docx]\n\nFree public Wi-Fi hotspots were installed in busy market areas and along major roads. [bhubaneswar-smart-city.docx]\n\nTechnology Initiatives The Bhubaneswar Smart City Limited special-purpose vehicle set up an integrated command and control centre. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.6666666666666666,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q26",
+      "type": "paraphrase",
+      "split": "test",
+      "question": "What do commuters use to pay for buses in the capital?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6717,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nBhubaneswar Smart City Mission Bhubaneswar, the capital of Odisha, was ranked first among the twenty lighthouse cities selected in the first round of India's Smart Cities Mission in 2016. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 0.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q27",
+      "type": "paraphrase",
+      "split": "dev",
+      "question": "How are fashion designers keeping weaving traditions alive?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6813,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nDesigners now work with weavers to adapt traditional motifs to contemporary garments while keeping the handwoven process intact. [odisha-handlooms.txt]\n\nHandloom Traditions of Odisha Odisha has a long handloom tradition centred on the ikat technique, known locally as bandha. [odisha-handlooms.txt]\n\nIn ikat weaving, the threads are tie-dyed before weaving, so the pattern is created in the yarn itself rather than printed on finished cloth. [odisha-handlooms.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q28",
+      "type": "multi",
+      "split": "dev",
+      "question": "Which Odisha districts weave Sambalpuri sarees, and which city ranked first in the Smart Cities Mission?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 0.5,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 0.5,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 0.5,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7597,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nBhubaneswar Smart City Mission Bhubaneswar, the capital of Odisha, was ranked first among the twenty lighthouse cities selected in the first round of India's Smart Cities Mission in 2016. [bhubaneswar-smart-city.docx]\n\nA single Sambalpuri saree can take one to two weeks to weave by hand, depending on the complexity of the pattern. [odisha-handlooms.txt]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.6666666666666666,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 0.5,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q29",
+      "type": "multi",
+      "split": "test",
+      "question": "What is the Odyssey card, and how are two ranked lists merged in hybrid retrieval?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 0.5,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.5,
+          "r@3": 0.5,
+          "r@5": 0.5
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.4,
+          "r@1": 0.5,
+          "r@3": 0.5,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7575,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nMerging two ranked lists is typically done with score normalisation or reciprocal rank fusion. [retrieval-augmented-generation.pdf, page 1]\n\nHybrid retrieval combines both rankings, because keyword search is precise for names and rare terms while vector search tolerates rewording. [retrieval-augmented-generation.pdf, page 1]\n\nIVF splits the space into lists and searches only the lists closest to the query. [vector-databases.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 0.5,
+      "answer_evidence_coverage": 0.5,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q30",
+      "type": "multi",
+      "split": "dev",
+      "question": "What is bandha, and what is the Mo Cycle programme?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 0.5,
+          "r@3": 0.5,
+          "r@5": 0.5
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.6,
+          "r@1": 0.5,
+          "r@3": 0.5,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.6,
+          "r@1": 0.5,
+          "r@3": 0.5,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7302,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nPublic bicycle sharing under the Mo Cycle programme was launched to encourage short trips without motor vehicles. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nKey Projects The city introduced a common payment card called the Odyssey card for its Mo Bus public transport service. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.6666666666666666,
+      "citation_evidence_coverage": 0.5,
+      "answer_evidence_coverage": 0.5,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q31",
+      "type": "multi",
+      "split": "test",
+      "question": "What does a RAG system do without evidence, and what does the GI tag protect Sambalpuri textiles against?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.4,
+          "r@1": 0.0,
+          "r@3": 0.5,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 0.3333333333333333,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.4,
+          "r@1": 0.0,
+          "r@3": 0.5,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 0.3333333333333333,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.4,
+          "r@1": 0.0,
+          "r@3": 0.5,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7498,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nGeographical Indication Sambalpuri bandha textiles hold a Geographical Indication tag, which recognises their link to the region and protects the name against [odisha-handlooms.txt]\n\ndha textiles hold a Geographical Indication tag, which recognises their link to the region and protects the name against machine-made imitations sold under the same label. [odisha-handlooms.txt]\n\nSambalpuri Textiles The Sambalpuri saree is the best-known product of this tradition. [odisha-handlooms.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 0.5,
+      "answer_evidence_coverage": 0.5,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q32",
+      "type": "multi",
+      "split": "dev",
+      "question": "Which communities weave Sambalpuri sarees, and which cities does the Mo Bus network connect?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 1.0,
+          "p@5": 0.6,
+          "r@1": 0.5,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 1.0,
+          "p@5": 0.6,
+          "r@1": 0.5,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 1.0,
+          "p@5": 0.6,
+          "r@1": 0.5,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6787,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nA single Sambalpuri saree can take one to two weeks to weave by hand, depending on the complexity of the pattern. [odisha-handlooms.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 1.0,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 0.5,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q33",
+      "type": "unanswerable_near",
+      "split": "dev",
+      "question": "What is the price of a Sambalpuri saree?",
+      "answerable": false,
+      "top_strength": 0.7184,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nA single Sambalpuri saree can take one to two weeks to weave by hand, depending on the complexity of the pattern. [odisha-handlooms.txt]\n\nSambalpuri Textiles The Sambalpuri saree is the best-known product of this tradition. [odisha-handlooms.txt]\n\nGeographical Indication Sambalpuri bandha textiles hold a Geographical Indication tag, which recognises their link to the region and protects the name against [odisha-handlooms.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q34",
+      "type": "unanswerable_near",
+      "split": "test",
+      "question": "Who is the mayor of Bhubaneswar?",
+      "answerable": false,
+      "top_strength": 0.7303,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nBhubaneswar Smart City Mission Bhubaneswar, the capital of Odisha, was ranked first among the twenty lighthouse cities selected in the first round of India's Smart Cities Mission in 2016. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q35",
+      "type": "unanswerable_near",
+      "split": "dev",
+      "question": "How many parameters does the embedding model have?",
+      "answerable": false,
+      "top_strength": 0.5646,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nVector methods rank chunks by embedding similarity, which can catch paraphrases. [retrieval-augmented-generation.pdf, page 1]\n\nGeneration The retrieved chunks are passed to the language model inside its prompt, with instructions to answer only from that evidence. [retrieval-augmented-generation.pdf, page 1]\n\nBoth have settings that move the balance between speed and recall. [vector-databases.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q36",
+      "type": "unanswerable_near",
+      "split": "test",
+      "question": "Which vector database should be used for indexing?",
+      "answerable": false,
+      "top_strength": 0.8269,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nVector search in databases A vector index stores embeddings so that the nearest ones to a query vector can be found without comparing every row. [vector-databases.txt]\n\nOthers add vector types to an existing relational database, so embeddings sit next to ordinary columns and can be filtered with normal SQL. [vector-databases.txt]\n\nExact search scans all vectors and gives perfect recall, but its cost grows linearly with the number of rows. [vector-databases.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q37",
+      "type": "unanswerable_near",
+      "split": "dev",
+      "question": "In which year was the Geographical Indication tag granted?",
+      "answerable": false,
+      "top_strength": 0.5824,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nGeographical Indication Sambalpuri bandha textiles hold a Geographical Indication tag, which recognises their link to the region and protects the name against [odisha-handlooms.txt]\n\ndha textiles hold a Geographical Indication tag, which recognises their link to the region and protects the name against machine-made imitations sold under the same label. [odisha-handlooms.txt]\n\nBhubaneswar Smart City Mission Bhubaneswar, the capital of Odisha, was ranked first among the twenty lighthouse cities selected in the first round of India's Smart Cities Mission in 2016. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q38",
+      "type": "unanswerable_near",
+      "split": "test",
+      "question": "How much money did the Smart Cities Mission spend in Bhubaneswar?",
+      "answerable": false,
+      "top_strength": 0.7883,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nBhubaneswar Smart City Mission Bhubaneswar, the capital of Odisha, was ranked first among the twenty lighthouse cities selected in the first round of India's Smart Cities Mission in 2016. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q39",
+      "type": "unanswerable_near",
+      "split": "dev",
+      "question": "What is the population of Cuttack?",
+      "answerable": false,
+      "top_strength": 0.6195,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]\n\nThe Mo Bus network connects Bhubaneswar with the neighbouring cities of Cuttack and Khordha. [bhubaneswar-smart-city.docx]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q40",
+      "type": "unanswerable_far",
+      "split": "dev",
+      "question": "Who won the 1998 football world cup final?",
+      "answerable": false,
+      "top_strength": 0.0431,
+      "top_rerank_score": null,
+      "lexical_overlap": false,
+      "abstained": true,
+      "answer": "I don't have enough evidence in the uploaded documents to answer that. Try adding relevant documents or rephrasing the question."
+    },
+    {
+      "id": "q41",
+      "type": "unanswerable_far",
+      "split": "test",
+      "question": "What is the capital of Australia?",
+      "answerable": false,
+      "top_strength": 0.5116,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": true,
+      "answer": "I don't have enough evidence in the uploaded documents to answer that. Try adding relevant documents or rephrasing the question."
+    },
+    {
+      "id": "q42",
+      "type": "unanswerable_far",
+      "split": "dev",
+      "question": "How do I bake sourdough bread?",
+      "answerable": false,
+      "top_strength": 0.0637,
+      "top_rerank_score": null,
+      "lexical_overlap": false,
+      "abstained": true,
+      "answer": "I don't have enough evidence in the uploaded documents to answer that. Try adding relevant documents or rephrasing the question."
+    },
+    {
+      "id": "q43",
+      "type": "unanswerable_far",
+      "split": "test",
+      "question": "What is the boiling point of water at sea level?",
+      "answerable": false,
+      "top_strength": 0.5748,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nThat makes it possible to run a local S3-compatible server for development and tests, then point the same client code at a hosted bucket by changing the endpoint and credentials. [object-storage.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q44",
+      "type": "unanswerable_far",
+      "split": "dev",
+      "question": "Explain quantum entanglement.",
+      "answerable": false,
+      "top_strength": 0.0454,
+      "top_rerank_score": null,
+      "lexical_overlap": false,
+      "abstained": true,
+      "answer": "I don't have enough evidence in the uploaded documents to answer that. Try adding relevant documents or rephrasing the question."
+    },
+    {
+      "id": "q45",
+      "type": "single",
+      "split": "test",
+      "question": "Which style of architecture has a deul, a jagamohana and a nata mandira?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.843,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nThe deul is the tower over the sanctum, the jagamohana is the porch where worshippers gather, and the nata mandira is a hall for ritual dance. [odisha-temples.txt]\n\nThe Kalinga style of architecture has three parts. [odisha-temples.txt]\n\nThe Kalinga style of architecture has three parts. [odisha-temples.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.6666666666666666,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q46",
+      "type": "single",
+      "split": "test",
+      "question": "How many pairs of wheels does the Konark Sun Temple have?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7653,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nKonark has the Sun Temple, built in the thirteenth century and designed as a giant chariot with twelve pairs of carved stone wheels. [odisha-temples.txt]\n\nTemples of Odisha Odisha is known for three temple clusters. [odisha-temples.txt]\n\nPuri has the Jagannath temple, which is the centre of the yearly Rath Yatra, when the three deities are pulled through the main avenue on large wooden chariots. [odisha-temples.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q47",
+      "type": "paraphrase",
+      "split": "test",
+      "question": "How does an approximate index like HNSW find close vectors quickly?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.8038,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nVector search in databases A vector index stores embeddings so that the nearest ones to a query vector can be found without comparing every row. [vector-databases.txt]\n\nExact search scans all vectors and gives perfect recall, but its cost grows linearly with the number of rows. [vector-databases.txt]\n\nEach chunk is converted into a vector, a list of numbers that captures its lexical or semantic content, and stored in a searchable index alongside metadata such as the source document and page number. [retrieval-augmented-generation.pdf, page 1]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 0.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q48",
+      "type": "single",
+      "split": "test",
+      "question": "What is a presigned URL?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7374,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nA presigned URL is a link that carries a temporary signature, so a person can download or upload one object for a short time without having account credentials. [object-storage.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q49",
+      "type": "single",
+      "split": "test",
+      "question": "When does the south-west monsoon bring most of the rain to Odisha?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.8913,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nMonsoon and farming in Odisha Most of the rain in Odisha arrives between June and September with the south-west monsoon. [monsoon-and-farming.txt]\n\nFields that depend only on rain are called rainfed, and they suffer when the monsoon is late or breaks for weeks. [monsoon-and-farming.txt]\n\nHandloom Traditions of Odisha Odisha has a long handloom tradition centred on the ikat technique, known locally as bandha. [odisha-handlooms.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q50",
+      "type": "paraphrase",
+      "split": "test",
+      "question": "Why should background tasks be safe to run twice?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.7212,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nBackground task queues A task queue lets a web server hand slow work to separate worker processes. [task-queues.txt]\n\nA worker takes the message, runs the task and records the result. [task-queues.txt]\n\nWith late acknowledgement, the message is acknowledged only after the task ends, so a task is run again if the worker dies half way. [task-queues.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.6666666666666666,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 0.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q51",
+      "type": "single",
+      "split": "test",
+      "question": "What does Celery beat do?",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 1.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 0.5,
+          "p@1": 0.0,
+          "p@3": 0.3333333333333333,
+          "p@5": 0.2,
+          "r@1": 0.0,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6591,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nCelery is a task queue for Python that can use Redis or RabbitMQ as its broker. [task-queues.txt]\n\nA periodic scheduler called beat can enqueue regular jobs, such as a sweep that finds work left behind by a crashed worker. [task-queues.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.3333333333333333,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 1.0,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q52",
+      "type": "multi",
+      "split": "test",
+      "question": "Name a broker that Celery can use, and say what an object key is in object storage.",
+      "answerable": true,
+      "retrieval": {
+        "bm25": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 0.5,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "vector": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 0.5,
+          "r@3": 1.0,
+          "r@5": 1.0
+        },
+        "hybrid_rrf": {
+          "mrr": 1.0,
+          "p@1": 1.0,
+          "p@3": 0.6666666666666666,
+          "p@5": 0.4,
+          "r@1": 0.5,
+          "r@3": 1.0,
+          "r@5": 1.0
+        }
+      },
+      "top_strength": 0.6146,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nEach object has a key, which works like a path name, plus its bytes and some metadata. [object-storage.txt]\n\nThere are no real folders: a slash in a key is only part of the name, and tools show prefixes as if they were folders. [object-storage.txt]\n\nObject storage basics Object storage keeps files as objects inside buckets. [object-storage.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "citation_precision": 0.6666666666666666,
+      "citation_evidence_coverage": 1.0,
+      "answer_evidence_coverage": 0.5,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q53",
+      "type": "unanswerable_near",
+      "split": "test",
+      "question": "How much does S3 storage cost per gigabyte per month?",
+      "answerable": false,
+      "top_strength": 0.6624,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nObject storage basics Object storage keeps files as objects inside buckets. [object-storage.txt]\n\nThat makes it possible to run a local S3-compatible server for development and tests, then point the same client code at a hosted bucket by changing the endpoint and credentials. [object-storage.txt]\n\nExact search scans all vectors and gives perfect recall, but its cost grows linearly with the number of rows. [vector-databases.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q54",
+      "type": "unanswerable_near",
+      "split": "test",
+      "question": "How many pilgrims attend the Rath Yatra each year?",
+      "answerable": false,
+      "top_strength": 0.6849,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nPuri has the Jagannath temple, which is the centre of the yearly Rath Yatra, when the three deities are pulled through the main avenue on large wooden chariots. [odisha-temples.txt]\n\nMany other services copy the same API. [object-storage.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q55",
+      "type": "unanswerable_near",
+      "split": "test",
+      "question": "What is the default HNSW ef_construction value?",
+      "answerable": false,
+      "top_strength": 0.5387,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nHNSW builds a layered graph of neighbours and walks it from the top layer down. [vector-databases.txt]\n\nBuckets should be private by default, and access is granted with policies. [object-storage.txt]\n\nBuckets should be private by default, and access is granted with policies. [object-storage.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "faithfulness": 1.0
+    },
+    {
+      "id": "q56",
+      "type": "unanswerable_near",
+      "split": "test",
+      "question": "What is the minimum support price of rice?",
+      "answerable": false,
+      "top_strength": 0.6347,
+      "top_rerank_score": null,
+      "lexical_overlap": true,
+      "abstained": false,
+      "answer": "Based on the retrieved passages:\n\nCrop insurance and minimum support prices are central government schemes that farmers can use to lower the risk. [monsoon-and-farming.txt]\n\nFarmers sow the kharif crop at its start, and rice is the main one. [monsoon-and-farming.txt]",
+      "n_citations": 3,
+      "citations_valid": true,
+      "faithfulness": 1.0
+    }
+  ]
+}

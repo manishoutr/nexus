@@ -87,6 +87,49 @@ class SentenceTransformerBackend:
         return [v.tolist() for v in vectors]
 
 
+class OnnxBackend:
+    """The same all-MiniLM-L6-v2 weights run through onnxruntime, with no torch.
+
+    Uses the model's published onnx/model.onnx plus tokenizers, mean pooling over the
+    attention mask and L2 normalization, which is what sentence-transformers does for
+    this model. scripts/onnx_parity.py measured cosine 1.000000 against the torch path
+    on the eval texts, so vectors from either backend can sit in one index (the model
+    name recorded on each chunk is therefore the same)."""
+
+    MAX_LEN = 256
+
+    def __init__(self, model_name: str):
+        import numpy as np
+        import onnxruntime as ort
+        from huggingface_hub import hf_hub_download
+        from tokenizers import Tokenizer
+        self._np = np
+        self._sess = ort.InferenceSession(hf_hub_download(model_name, "onnx/model.onnx"),
+                                          providers=["CPUExecutionProvider"])
+        self._tok = Tokenizer.from_file(hf_hub_download(model_name, "tokenizer.json"))
+        self._tok.enable_truncation(self.MAX_LEN)
+        self._tok.enable_padding()
+        self.name = model_name
+        self.dim = 384
+        self._run_lock = threading.Lock()  # the tokenizer's padding state is shared
+
+    def embed_many(self, texts: List[str]) -> List[List[float]]:
+        np = self._np
+        out_all = []
+        for i in range(0, len(texts), 32):
+            with self._run_lock:
+                enc = self._tok.encode_batch(texts[i:i + 32])
+            ids = np.array([e.ids for e in enc], dtype=np.int64)
+            mask = np.array([e.attention_mask for e in enc], dtype=np.int64)
+            hidden = self._sess.run(None, {"input_ids": ids, "attention_mask": mask,
+                                           "token_type_ids": np.zeros_like(ids)})[0]
+            m = mask[..., None].astype(np.float32)
+            v = (hidden * m).sum(1) / np.clip(m.sum(1), 1e-9, None)
+            v = v / np.linalg.norm(v, axis=1, keepdims=True)
+            out_all.extend(x.tolist() for x in v)
+        return out_all
+
+
 _lock = threading.Lock()
 _backend = None
 
@@ -96,6 +139,7 @@ def get_backend():
 
     EMBEDDING_BACKEND=auto (default): sentence-transformers when it imports
     and the model loads, otherwise the hashing fallback.
+    EMBEDDING_BACKEND=onnx: the same model through onnxruntime (no torch), fail loudly.
     EMBEDDING_BACKEND=st: require sentence-transformers (fail loudly).
     EMBEDDING_BACKEND=hash: force the fallback (used by the light demo image).
     """
@@ -107,6 +151,10 @@ def get_backend():
             return _backend
         from ..config import settings
         choice = settings.embedding_backend
+        if choice == "onnx":
+            _backend = OnnxBackend(settings.embedding_model)  # fail loudly if unavailable
+            log.info("embedding backend: onnxruntime %s (%d-dim)", _backend.name, _backend.dim)
+            return _backend
         if choice in ("auto", "st"):
             try:
                 _backend = SentenceTransformerBackend(settings.embedding_model)
@@ -116,8 +164,14 @@ def get_backend():
             except Exception as e:  # noqa: BLE001 - missing dep, no network, OOM
                 if choice == "st":
                     raise
-                log.warning("sentence-transformers unavailable (%s); "
-                            "falling back to hashing embeddings", e)
+                log.warning("sentence-transformers unavailable (%s)", e)
+            if choice == "auto":
+                try:
+                    _backend = OnnxBackend(settings.embedding_model)
+                    log.info("embedding backend: onnxruntime %s", _backend.name)
+                    return _backend
+                except Exception as e:  # noqa: BLE001
+                    log.warning("onnx backend unavailable (%s); falling back to hashing embeddings", e)
         _backend = HashingBackend()
         log.info("embedding backend: %s (%d-dim)", _backend.name, _backend.dim)
         return _backend

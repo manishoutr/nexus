@@ -50,7 +50,8 @@ The React app is already built into `app/static`. To change it: `cd frontend && 
 (proxies `/api` to port 8000), then `npm run build`.
 
 For real embeddings and the reranker: `pip install -r requirements-ml.txt` (pulls torch, large) and set
-`EMBEDDING_BACKEND=st`. Full environment reference: `docs/ENVIRONMENT.md`.
+`EMBEDDING_BACKEND=st`. For the same embeddings without torch: `pip install -r requirements-onnx.txt` and
+`EMBEDDING_BACKEND=onnx` (no reranker). Full environment reference: `docs/ENVIRONMENT.md`.
 
 ### Full stack
 ```bash
@@ -121,4 +122,6 @@ reranker, three quarters of related-but-unanswerable questions still get an answ
 - Rate limits are per process unless `RATE_LIMIT_STORAGE` points at Redis; sharing was tested only at the storage layer.
 - No test kills a Celery worker with `kill -9` mid-job; recovery is tested by simulating the dead claim.
 - DOCX and TXT have no real page numbers; their citations use sections.
-- The sentence-transformers build needs torch. It is expected not to fit a 512 MB free host (not measured).
+- The sentence-transformers build needs torch (about 476 MB resident for the embedder alone, measured locally). An ONNX
+  path with identical embeddings (`EMBEDDING_BACKEND=onnx`, about 203 MB) exists, but it has no reranker, so it has the weaker
+  abstention row in the evaluation table. Neither has been measured on a real free host.
