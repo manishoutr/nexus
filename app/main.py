@@ -1,31 +1,40 @@
 """Nexus API: workspaces, document upload, ingestion status, search, Q&A."""
 import hashlib
 import json
-import uuid
 import logging
 import time
+import uuid
 from pathlib import Path
-
 from typing import Optional
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
-
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from . import auth
 from .config import settings
 from .db import SessionLocal, get_db, init_db
-from .models import (Chunk, Document, IngestionJob, Membership, QaLog, User,
-                     Workspace)
 from .logging_config import request_id_var, setup_logging
+from .models import Chunk, Document, IngestionJob, Membership, QaLog, User, Workspace
 from .ratelimit import limiter
-from .schemas import (AskRequest, AskResponse, DocumentOut, LoginIn, MemberIn,
-                      RefreshIn, RegisterIn, SearchRequest, SearchResponse,
-                      TokenOut, UserOut, WorkspaceIn, WorkspaceOut)
+from .schemas import (
+    AskRequest,
+    AskResponse,
+    DocumentOut,
+    LoginIn,
+    MemberIn,
+    RefreshIn,
+    RegisterIn,
+    SearchRequest,
+    SearchResponse,
+    TokenOut,
+    UserOut,
+    WorkspaceIn,
+    WorkspaceOut,
+)
 from .services import qa as qa_service
 from .services.llm import llm
 from .services.safety import clean_question

@@ -16,12 +16,12 @@ from ..config import settings
 from ..models import Chunk
 from ..schemas import Citation
 from . import vectorstore
-from .embeddings import HASH_BACKEND_NAME, backend_name, embed, tokenize
 from .citations import strip_unverified_inline_refs, verify_citations
+from .embeddings import HASH_BACKEND_NAME, backend_name, embed, tokenize
 from .llm import LLMError, llm
 from .rerank import rerank
-from .safety import SYSTEM_PROMPT, scan, build_passages_block, clean_question
 from .retrieval import hybrid_scores
+from .safety import SYSTEM_PROMPT, build_passages_block, clean_question, scan
 
 
 class RetrievedChunk:

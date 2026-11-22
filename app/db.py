@@ -1,5 +1,6 @@
 """Database setup. SQLite by default; PostgreSQL via DATABASE_URL.
 JSON blobs are stored as Text so the same code runs on both engines."""
+import threading
 from pathlib import Path
 
 from sqlalchemy import create_engine
@@ -13,6 +14,11 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False
 Base = declarative_base()
 
 
+# Alembic's command API uses a process-global context, so two threads (for
+# example a Celery thread pool) must not migrate at the same moment.
+_migrate_lock = threading.Lock()
+
+
 def init_db() -> None:
     """Bring the schema to the latest Alembic revision. Safe to call on every
     start: a current database is left alone, an old one is upgraded, and a
@@ -24,7 +30,7 @@ def init_db() -> None:
     cfg = Config(str(Path(__file__).resolve().parent.parent / "alembic.ini"))
     cfg.set_main_option("script_location",
                         str(Path(__file__).resolve().parent.parent / "migrations"))
-    with engine.begin() as conn:
+    with _migrate_lock, engine.begin() as conn:
         cfg.attributes["connection"] = conn
         command.upgrade(cfg, "head")
 

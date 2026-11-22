@@ -10,9 +10,10 @@ def test_txt_gives_single_unpaged_block():
 
 
 def test_pdf_gives_real_page_numbers():
+    import io
+
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
-    import io
 
     buf = io.BytesIO()
     pdf = canvas.Canvas(buf, pagesize=A4)

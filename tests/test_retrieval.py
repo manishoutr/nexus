@@ -4,8 +4,7 @@ These run on the deterministic hashing backend (EMBEDDING_BACKEND=hash is set
 by tests/test_api.py, collected first) so the suite needs no model download.
 """
 from app.services.embeddings import HASH_BACKEND_NAME, backend_name, embed
-from app.services.retrieval import (bm25_rank, hybrid_scores, rrf_merge,
-                                    vector_rank)
+from app.services.retrieval import bm25_rank, hybrid_scores, rrf_merge, vector_rank
 
 CHUNKS = [
     "Hybrid retrieval combines keyword BM25 with vector similarity because "

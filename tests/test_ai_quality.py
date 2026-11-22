@@ -9,8 +9,7 @@ from app.models import Chunk, Document, User, Workspace
 from app.schemas import Citation
 from app.services import llm as llm_mod
 from app.services import qa, worker
-from app.services.citations import (strip_unverified_inline_refs,
-                                    verify_citation, verify_citations)
+from app.services.citations import strip_unverified_inline_refs, verify_citation, verify_citations
 from app.services.llm import LLMError, LLMService
 from app.services.storage import get_storage, new_key
 
@@ -195,7 +194,7 @@ def test_claude_can_abstain_itself(monkeypatch):
 
 
 def test_citation_that_disappears_is_dropped_and_answer_abstains(monkeypatch):
-    doc = ingest(1, "notes.txt", DOC)
+    ingest(1, "notes.txt", DOC)
     real = qa._citation
 
     def ghost(r):

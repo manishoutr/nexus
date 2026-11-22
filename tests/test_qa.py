@@ -6,11 +6,12 @@ os.environ["DATABASE_URL"] = "sqlite:///" + os.path.join(tempfile.mkdtemp(), "qa
 os.environ["LLM_MODE"] = "offline"
 os.environ["EMBEDDING_BACKEND"] = "hash"
 
-from app.db import init_db, SessionLocal  # noqa: E402
+import json  # noqa: E402
+
+from app.db import SessionLocal, init_db  # noqa: E402
 from app.models import Chunk, Document, Workspace  # noqa: E402
 from app.services.embeddings import embed  # noqa: E402
 from app.services.qa import ask  # noqa: E402
-import json  # noqa: E402
 
 init_db()
 
@@ -68,7 +69,7 @@ def test_unrelated_question_abstains_over_many_chunks(db_path=None):
     cleared the abstain threshold (vector noise). A question with zero
     lexical overlap must abstain regardless of corpus size."""
     db, ws_id = _seed()
-    from app.models import Document, Chunk
+    from app.models import Chunk, Document
     from app.services.embeddings import embed
     doc = Document(workspace_id=ws_id, filename="filler.txt", status="done",
                    size_bytes=1)

@@ -1,7 +1,7 @@
 """pgvector behaviour. Runs only against PostgreSQL (scripts/test_on_postgres.py)."""
 import pytest
 
-from app.db import SessionLocal, init_db, is_postgres, reset_db_for_tests
+from app.db import SessionLocal, is_postgres, reset_db_for_tests
 
 pytestmark = pytest.mark.skipif(not is_postgres(), reason="needs PostgreSQL + pgvector")
 

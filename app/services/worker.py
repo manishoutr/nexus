@@ -28,10 +28,10 @@ from sqlalchemy import update
 from ..config import settings
 from ..db import SessionLocal
 from ..models import Chunk, Document, IngestionJob
+from . import vectorstore
 from .chunk import chunk_document
 from .embeddings import backend_name, embed_many
 from .extract import extract_pages
-from . import vectorstore
 from .storage import get_storage
 from .validate import UploadRejected, validate_upload
 

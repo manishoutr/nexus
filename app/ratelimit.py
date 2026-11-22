@@ -13,6 +13,7 @@ def key_func(request: Request) -> str:
     if h.lower().startswith("bearer "):
         try:
             import jwt
+
             from .auth import ALGORITHM, _secret
             sub = jwt.decode(h[7:].strip(), _secret, algorithms=[ALGORITHM])["sub"]
             return f"user:{sub}"

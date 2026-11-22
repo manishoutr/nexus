@@ -20,7 +20,7 @@ pytest.importorskip("celery")
 redislite = pytest.importorskip("redislite")
 moto_server = pytest.importorskip("moto.server")
 
-from app.auth import make_token
+from app.auth import make_token  # noqa: E402
 from app.db import SessionLocal, init_db, reset_db_for_tests  # noqa: E402
 from app.models import Chunk, Document, IngestionJob, User, Workspace  # noqa: E402
 from app.services import storage as storage_mod  # noqa: E402
@@ -70,6 +70,7 @@ def test_s3_storage_roundtrip_and_missing_key(s3_endpoint):
 
 def test_ingest_from_s3_then_delete(s3_endpoint, monkeypatch):
     from fastapi.testclient import TestClient
+
     from app.main import app
     s3 = S3Storage("nexus-test2", s3_endpoint)
     s3.ensure_bucket()
@@ -129,6 +130,7 @@ def _wait(pred, timeout=20):
 
 def test_upload_is_processed_by_real_celery_worker(celery_worker, monkeypatch):
     from fastapi.testclient import TestClient
+
     from app.config import settings
     from app.main import app
     monkeypatch.setattr(settings, "queue_backend", "celery")
@@ -139,8 +141,10 @@ def test_upload_is_processed_by_real_celery_worker(celery_worker, monkeypatch):
                         files={"file": (f"f{i}.txt", TXT + str(i).encode())})
         assert r.status_code == 201
         ids.append(r.json()["id"])
-    assert _wait(lambda: all(
-        SessionLocal().query(Document).get(i).status == "done" for i in ids))
+    def all_done():
+        with SessionLocal() as s:
+            return all(s.get(Document, i).status == "done" for i in ids)
+    assert _wait(all_done)
     db = SessionLocal()
     jobs = db.query(IngestionJob).all()
     assert len(jobs) == 5 and all(j.status == "done" and j.attempts == 1 for j in jobs)
@@ -172,6 +176,7 @@ def test_duplicate_task_delivery_does_not_double_process(celery_worker):
 
 def test_sweep_recovers_job_orphaned_by_dead_worker(celery_worker):
     from datetime import datetime, timedelta
+
     from app.services.tasks import sweep
     db = SessionLocal()
     key = new_key(1)

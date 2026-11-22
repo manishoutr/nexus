@@ -5,7 +5,7 @@ and similarity search runs in the database (HNSW, cosine). On SQLite, or with
 the 256-dim hashing fallback, nothing here is used and retrieval falls back to
 the JSON vectors in Python. Raw SQL is used so the ORM models stay portable.
 """
-from typing import Dict, List, Sequence
+from typing import Dict, Sequence
 
 from sqlalchemy import text
 

@@ -1,7 +1,7 @@
 """ORM models. JSON fields are stored as JSON-encoded Text for portability."""
 import json
 
-from sqlalchemy import Column, DateTime, Float, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import Column, DateTime, Integer, String, Text, UniqueConstraint, func
 
 from .db import Base
 

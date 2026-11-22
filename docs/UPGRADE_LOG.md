@@ -117,4 +117,11 @@ No code changed. Found a clean ~880 line layout. Gaps against the target design:
 
 **Tests:** SQLite 85 passed + 5 skipped (the pgvector tests skip off Postgres); on PostgreSQL the suite passes (79 earlier run, plus 8 migration/pgvector tests passed). Migrations: fresh schema equals the models (alembic autogenerate diff empty), upgrade repeatable, downgrade to base, pre-Alembic database adopted with data kept. pgvector: extension and HNSW index exist, vectors have 384 dims, the planner uses the HNSW index when seqscan is disabled, retrieval goes through pgvector and ranks the same as the Python cosine path, workspace isolation.
 
-**Still to do in Phase 6:** Dockerfile + docker-compose (api, celery worker, beat, postgres/pgvector, redis, MinIO), GitHub Actions (lint + tests, SQLite and Postgres/Redis services), `.env.example` and environment variable docs. Docker is not installed here, so compose files can only be validated for syntax locally, not run.
+**Infrastructure files (added)**
+- `Dockerfile` (non-root, healthcheck, `WITH_ML=1` build arg for sentence-transformers), `docker-compose.yml` (api, celery worker, beat, pgvector Postgres, Redis, MinIO + bucket init), `.env.example`, `docs/ENVIRONMENT.md`.
+- `.github/workflows/ci.yml`: ruff, tests on SQLite, tests on a pgvector Postgres service. `ruff.toml`, `pytest.ini` (tests/ only).
+- **Not verified:** Docker is not installed here, so the Dockerfile and compose file have NOT been built or run (compose was only parsed as YAML). CI has not run on GitHub yet.
+
+**Bug found by the real Celery integration test after the Alembic change:** the worker's thread pool called `init_db()` from several threads at once and Alembic's global context raised `KeyError('config')`, so jobs failed. Fixed with a lock in `init_db()`; regression test `test_init_db_is_safe_from_many_threads`. The integration test also leaked DB sessions while polling; fixed.
+
+**Final Phase 6 test numbers:** SQLite + real Redis/Celery/moto-S3: 92 passed, 5 skipped. Real PostgreSQL 16 + pgvector (no integration folder): 91 passed. ruff clean.

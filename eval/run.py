@@ -80,14 +80,14 @@ def main() -> None:
     args = parse()
     setup_env(args.backend, args.rerank)
     sys.path.insert(0, str(ROOT))
-    from eval import metrics as M
+    from app.config import settings
     from app.db import SessionLocal
     from app.models import Chunk
     from app.services import qa
+    from app.services.citations import verify_citations
     from app.services.embeddings import backend_name, embed, tokenize
     from app.services.retrieval import bm25_rank, vector_rank
-    from app.services.citations import verify_citations
-    from app.config import settings
+    from eval import metrics as M
 
     ws_id = build_corpus()
     db = SessionLocal()

@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from app import auth
 from app.db import SessionLocal, init_db, reset_db_for_tests
 from app.main import app
-from app.models import Chunk, Document, Workspace
+from app.models import Document, Workspace
 from app.ratelimit import limiter
 from app.services import qa, worker
 from app.services.safety import build_passages_block, sanitize_passage, scan
@@ -241,7 +241,9 @@ def test_question_limits_and_control_chars():
 
 
 def _import_auth(env):
-    import os, subprocess, sys
+    import os
+    import subprocess
+    import sys
     e = {k: v for k, v in os.environ.items() if k not in ("JWT_SECRET", "APP_ENV")}
     e.update(env)
     return subprocess.run([sys.executable, "-c", "import app.auth"], env=e,
@@ -295,6 +297,7 @@ def test_readiness_returns_503_when_storage_fails(monkeypatch):
 def test_json_log_format_merges_structured_events():
     import json as _json
     import logging
+
     from app.logging_config import JsonFormatter
     rec = logging.LogRecord("nexus.worker", logging.INFO, "f", 1, _json.dumps({"event": "job_done", "job": 7}), None, None)
     out = _json.loads(JsonFormatter().format(rec))

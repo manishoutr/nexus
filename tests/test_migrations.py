@@ -67,3 +67,21 @@ def test_database_created_before_alembic_is_adopted_without_data_loss():
         assert "users" in insp.get_table_names() and "memberships" in insp.get_table_names()
         assert conn.execute(sa.text("SELECT text FROM chunks")).scalar() == "kept"
         assert conn.execute(sa.text("SELECT name FROM workspaces")).scalar() == "old library"
+
+
+def test_init_db_is_safe_from_many_threads():
+    """Celery's thread pool calls init_db concurrently; this used to raise KeyError('config')."""
+    import threading
+
+    from app.db import init_db
+    errors = []
+
+    def go():
+        try:
+            init_db()
+        except Exception as e:  # noqa: BLE001
+            errors.append(e)
+    ts = [threading.Thread(target=go) for _ in range(6)]
+    [t.start() for t in ts]
+    [t.join() for t in ts]
+    assert not errors

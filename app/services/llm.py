@@ -7,7 +7,7 @@ runs in OFFLINE mode and answers are labelled as such.
 import json
 import logging
 import time
-from typing import List, Optional, Type
+from typing import Optional, Type
 
 from pydantic import BaseModel, ValidationError
 
