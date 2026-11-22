@@ -25,6 +25,17 @@ passages.
    threshold, Nexus says it does not have enough evidence instead of
    inventing an answer.
 
+## Live demo
+
+https://nexus-pkju.onrender.com
+
+Hosted on Render's free tier in offline mode (no API key): answers are
+extractive fallbacks built only from the retrieved passages. A demo
+"Research library" workspace is seeded on first boot. Free-tier notes: the
+service sleeps after 15 minutes idle (first load can take about a minute to
+wake), and uploaded documents are ephemeral - they reset on redeploy or
+restart.
+
 ## Quickstart (5 minutes, no API key needed)
 
 ```bash
