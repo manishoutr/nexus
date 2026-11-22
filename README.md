@@ -36,6 +36,14 @@ service sleeps after 15 minutes idle (first load can take about a minute to
 wake), and uploaded documents are ephemeral - they reset on redeploy or
 restart.
 
+## Screenshots
+
+![Search: hybrid retrieval across the library](docs/screenshots/search.png)
+
+![Reader: the exact source passage for a result](docs/screenshots/reader.png)
+
+![Ask: an answer with citations back to the sources](docs/screenshots/ask.png)
+
 ## Quickstart (5 minutes, no API key needed)
 
 ```bash
