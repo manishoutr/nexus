@@ -18,7 +18,7 @@ Read this first. It is the honest status of each claim.
 | S3 storage | Tested against moto, an S3-compatible server. **Not tested against AWS S3.** |
 | Claude API | **Not tested with a real key.** The code path is tested with a fake client only. The app runs in offline mode (answers built from retrieved sentences) unless `ANTHROPIC_API_KEY` is set, and the UI says which mode is active. |
 | Docker / docker-compose | Files written and YAML-checked. **Docker was not available where this was built, so they have never been built or run.** |
-| GitHub Actions CI | Workflow written; see the CI badge section of `docs/UPGRADE_LOG.md` for the first real run. |
+| GitHub Actions CI | Ran on GitHub for commit dc37d19: lint, SQLite tests, tests against a pgvector Postgres service, and frontend tests/build all passed (https://github.com/manishoutr/nexus/actions/runs/45029088385). The first run failed because `alembic` was missing from requirements.txt; fixed. |
 | Live demo | Runs an older light build (hashing embeddings, SQLite). It does not have the upgrades described here yet. |
 
 ## What it does

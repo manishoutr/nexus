@@ -125,3 +125,10 @@ No code changed. Found a clean ~880 line layout. Gaps against the target design:
 **Bug found by the real Celery integration test after the Alembic change:** the worker's thread pool called `init_db()` from several threads at once and Alembic's global context raised `KeyError('config')`, so jobs failed. Fixed with a lock in `init_db()`; regression test `test_init_db_is_safe_from_many_threads`. The integration test also leaked DB sessions while polling; fixed.
 
 **Final Phase 6 test numbers:** SQLite + real Redis/Celery/moto-S3: 92 passed, 5 skipped. Real PostgreSQL 16 + pgvector (no integration folder): 91 passed. ruff clean.
+
+## Phase 7: frontend, evaluation, docs, CI
+- React (Vite) frontend in `frontend/`, built into `app/static`. Sign in / register, token refresh on 401, role-aware UI (upload only for editors), offline-mode label, citation chips, upload polling. 9 vitest tests. A real headless Chrome run (register, create workspace, upload, wait for ingestion, ask) found a bug the unit tests missed (polling did not restart after upload); fixed and covered by a test. Phone width checked (screenshots in `docs/screenshots/`).
+- Evaluation corpus grew from 3 to 8 documents (22 chunks, 5 distractors) and 44 to 56 questions (12 new, all held-out `test`). Numbers in README; thresholds not retuned. The cross-encoder gate still holds (test-split abstention 87.5%), without it three quarters of near-miss questions are wrongly answered.
+- Docs: README rewritten with a verified/unverified table, `docs/API.md`, `docs/ARCHITECTURE.md` (mermaid diagram), `docs/ENVIRONMENT.md`.
+- **CI on GitHub (real run, commit dc37d19):** lint, test-sqlite, test-postgres (pgvector service container) and frontend all passed. First push failed: `alembic` was never added to `requirements.txt` (my venv had it). A clean-venv run reproduced it; fixed. This also would have broken the Docker image and any deploy.
+- Not verified: Docker build/run, real Claude, AWS S3, live deploy of this build.
