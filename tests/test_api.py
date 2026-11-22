@@ -5,6 +5,7 @@ import time
 
 os.environ["DATABASE_URL"] = "sqlite:///" + os.path.join(tempfile.mkdtemp(), "api.db")
 os.environ["LLM_MODE"] = "offline"
+os.environ["EMBEDDING_BACKEND"] = "hash"
 os.environ["DATA_DIR"] = tempfile.mkdtemp()
 
 from fastapi.testclient import TestClient  # noqa: E402

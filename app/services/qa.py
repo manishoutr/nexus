@@ -15,31 +15,38 @@ from pydantic import BaseModel
 from ..config import settings
 from ..models import Chunk
 from ..schemas import Citation
-from .embeddings import tokenize
+from .embeddings import HASH_BACKEND_NAME, backend_name, tokenize
 from .llm import llm
+from .rerank import rerank
 from .retrieval import hybrid_scores
 
 
 class RetrievedChunk:
-    def __init__(self, chunk: Chunk, document_name: str, score: float):
+    def __init__(self, chunk: Chunk, document_name: str, score: float,
+                 strength: float = 0.0):
         self.chunk = chunk
         self.document_name = document_name
-        self.score = score
+        self.score = score          # RRF score, used for ordering
+        self.strength = strength    # absolute evidence signal, used to abstain
 
 
-def retrieve(db, workspace_id: int, query: str, k: int = 5) -> List[RetrievedChunk]:
+def retrieve(db, workspace_id: int, query: str, k: Optional[int] = None
+             ) -> List[RetrievedChunk]:
     from ..models import Document
+    if k is None:
+        k = settings.retrieval_k
     chunks = db.query(Chunk).filter_by(workspace_id=workspace_id).all()
     if not chunks:
         return []
     doc_names = {d.id: d.filename
                  for d in db.query(Document).filter_by(workspace_id=workspace_id)}
-    combined, _ = hybrid_scores([c.text for c in chunks],
-                                [c.embedding_list() for c in chunks], query)
-    ranked = sorted((RetrievedChunk(c, doc_names.get(c.document_id, "?"), s)
-                     for c, s in zip(chunks, combined)),
+    combined, parts = hybrid_scores([c.text for c in chunks],
+                                    [c.embedding_list() for c in chunks], query)
+    ranked = sorted((RetrievedChunk(c, doc_names.get(c.document_id, "?"), s, st)
+                     for c, s, st in zip(chunks, combined, parts["strength"])),
                     key=lambda r: r.score, reverse=True)
-    return ranked[: max(1, min(k, 20))]
+    top = ranked[: max(1, min(k, 20))]
+    return rerank(query, top)
 
 
 def _citation(r: RetrievedChunk) -> Citation:
@@ -82,18 +89,29 @@ def _offline_answer(question: str, ranked: List[RetrievedChunk]) -> str:
     return "Based on the retrieved passages:\n\n" + "\n\n".join(lines)
 
 
-def ask(db, workspace_id: int, question: str, k: int = 5) -> dict:
+def _abstain_threshold() -> float:
+    """The hashing fallback and sentence-transformers produce differently
+    distributed scores, so each has its own calibrated threshold."""
+    if backend_name() == HASH_BACKEND_NAME:
+        return settings.abstain_threshold
+    return settings.abstain_threshold_st
+
+
+def ask(db, workspace_id: int, question: str, k: Optional[int] = None) -> dict:
     """Returns {answer, citations, mode, abstained}."""
     ranked = retrieve(db, workspace_id, question, k)
-    # Offline embeddings are lexical (hashing), so a top score built only on
-    # vector signal is hashing noise: with enough chunks the max random
-    # cosine clears the threshold on its own. Require at least one shared
-    # content word before trusting an offline answer. Claude mode judges
-    # relevance from the passages itself, so the gate stays score-only there.
+    # With the hashing fallback the vector signal is lexical noise: with
+    # enough chunks the max random cosine clears the threshold on its own.
+    # Require at least one shared content word before trusting an offline
+    # hashing answer. Sentence-transformer vectors are semantic, and Claude
+    # mode judges relevance from the passages itself, so those gates stay
+    # score-only.
     q_terms = set(tokenize(question))
     has_lexical = any(q_terms & set(tokenize(r.chunk.text)) for r in ranked[:3])
-    weak = not ranked or ranked[0].score < settings.abstain_threshold
-    if weak or (not llm.enabled and not has_lexical):
+    weak = not ranked or ranked[0].strength < _abstain_threshold()
+    lexical_gate = (not llm.enabled
+                    and backend_name() == HASH_BACKEND_NAME and not has_lexical)
+    if weak or lexical_gate:
         return {"answer": "I don't have enough evidence in the uploaded "
                           "documents to answer that. Try adding relevant "
                           "documents or rephrasing the question.",

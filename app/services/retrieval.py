@@ -1,8 +1,17 @@
-"""Hybrid retrieval over chunks: BM25 + vector cosine, min-max merged."""
+"""Hybrid retrieval over chunks.
+
+BM25 keyword retrieval and vector similarity retrieval run independently and
+produce their own ranked lists; Reciprocal Rank Fusion (RRF) merges the two
+rankings into the final order. Alongside the RRF order we compute an
+absolute "strength" signal (not rank-based) which is what makes abstention
+possible: a query with no real evidence stays near zero instead of being
+stretched by normalization.
+"""
 import math
 from collections import Counter
 from typing import Dict, List, Sequence, Tuple
 
+from ..config import settings
 from .embeddings import cosine, embed, tokenize
 
 
@@ -50,22 +59,63 @@ def _minmax(scores: Sequence[float]) -> List[float]:
     return [(s - lo) / (hi - lo) for s in scores]
 
 
+def bm25_rank(texts: Sequence[str], query: str) -> List[Tuple[int, float]]:
+    """Independent keyword retrieval: (corpus index, BM25 score), best first."""
+    raw = BM25(texts).scores(query)
+    return sorted(enumerate(raw), key=lambda t: t[1], reverse=True)
+
+
+def vector_rank(embeddings: Sequence[List[float]], query_vector: Sequence[float]
+                ) -> List[Tuple[int, float]]:
+    """Independent vector retrieval: (corpus index, cosine), best first."""
+    raw = [cosine(query_vector, e) for e in embeddings]
+    return sorted(enumerate(raw), key=lambda t: t[1], reverse=True)
+
+
+def rrf_merge(rankings: Sequence[Sequence[Tuple[int, float]]], k: int = 60
+              ) -> Dict[int, float]:
+    """Reciprocal Rank Fusion: score(i) = sum over rankings of 1/(k + rank_i).
+
+    Rank-based, so a method that scores everything zero still contributes its
+    ordering; items missing from a ranking simply get no points from it.
+    """
+    fused: Dict[int, float] = {}
+    for ranking in rankings:
+        for rank, (idx, _score) in enumerate(ranking, start=1):
+            fused[idx] = fused.get(idx, 0.0) + 1.0 / (k + rank)
+    return fused
+
+
 def hybrid_scores(texts: Sequence[str], embeddings: Sequence[List[float]],
-                  query: str, alpha: float = 0.5) -> Tuple[List[float], Dict[str, List[float]]]:
-    """Combined scores preserve ABSOLUTE evidence strength, which is what
-    makes abstention possible: a query with no real matches scores near zero
-    instead of being stretched to 0.5 by normalization. Keyword signal is
-    zeroed when BM25 found no term match at all; vector signal is scaled by
-    the raw cosine, so weak similarities stay weak."""
-    bm25_raw = BM25(texts).scores(query)
-    bm25 = _minmax(bm25_raw)
+                  query: str, alpha: float = 0.5
+                  ) -> Tuple[List[float], Dict[str, List[float]]]:
+    """RRF-ordered combined scores plus per-method components.
+
+    Returns (combined, components): combined[i] is the RRF score used for
+    ranking; components carries the independent signals and an absolute
+    "strength" per item (normalized keyword signal gated on a real term hit,
+    plus raw-cosine-scaled vector signal) used by the abstention gate.
+    """
+    b_ranking = bm25_rank(texts, query)
     qv = embed(query)
-    vec_raw = [cosine(qv, e) for e in embeddings]
+    v_ranking = vector_rank(embeddings, qv)
+    fused = rrf_merge([b_ranking, v_ranking], k=settings.rrf_k)
+    n = len(texts)
+    combined = [fused.get(i, 0.0) for i in range(n)]
+
+    bm25_raw = [0.0] * n
+    for i, s in b_ranking:
+        bm25_raw[i] = s
+    vec_raw = [0.0] * n
+    for i, s in v_ranking:
+        vec_raw[i] = s
+    bm25 = _minmax(bm25_raw)
     vec = _minmax(vec_raw)
-    combined = []
+    strength = []
     for b, br, v, vr in zip(bm25, bm25_raw, vec, vec_raw):
         b_signal = b if br > 0 else 0.0
         v_signal = v * max(0.0, vr)
-        combined.append(alpha * b_signal + (1 - alpha) * v_signal)
+        strength.append(alpha * b_signal + (1 - alpha) * v_signal)
     return combined, {"bm25": bm25, "vector": vec,
-                      "bm25_raw": bm25_raw, "vector_raw": vec_raw}
+                      "bm25_raw": bm25_raw, "vector_raw": vec_raw,
+                      "strength": strength}

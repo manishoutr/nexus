@@ -1,0 +1,5 @@
+-r requirements.txt
+# Phase 2 retrieval upgrade: real semantic embeddings (+ optional
+# cross-encoder reranking from the same package). Heavy: pulls torch.
+# The app runs without this via the hashing fallback (EMBEDDING_BACKEND=hash).
+sentence-transformers>=3.0

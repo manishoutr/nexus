@@ -39,6 +39,11 @@ class Chunk(Base):
     page = Column(Integer, default=0)      # 1-based for PDFs, 0 when unknown
     section = Column(String, default="")
     embedding = Column(Text, default="[]")  # JSON list of floats
+    # Which embedding backend produced `embedding` (e.g.
+    # "sentence-transformers/all-MiniLM-L6-v2" or "hashing-v1"). Chunks whose
+    # model differs from the active backend are re-embedded, never compared
+    # across spaces.
+    embedding_model = Column(String, default="")
 
     def embedding_list(self) -> list:
         return json.loads(self.embedding or "[]")

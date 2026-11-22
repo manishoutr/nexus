@@ -4,6 +4,7 @@ import tempfile
 
 os.environ["DATABASE_URL"] = "sqlite:///" + os.path.join(tempfile.mkdtemp(), "qa.db")
 os.environ["LLM_MODE"] = "offline"
+os.environ["EMBEDDING_BACKEND"] = "hash"
 
 from app.db import init_db, SessionLocal  # noqa: E402
 from app.models import Chunk, Document, Workspace  # noqa: E402

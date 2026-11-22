@@ -196,7 +196,9 @@ def search(workspace_id: int, req: SearchRequest, db: Session = Depends(get_db))
         results=[{"chunk_id": r.chunk.id, "document_id": r.chunk.document_id,
                   "document_name": r.document_name, "page": r.chunk.page,
                   "section": r.chunk.section, "text": r.chunk.text,
-                  "score": round(r.score, 3)} for r in ranked])
+                  # Displayed score is the absolute evidence strength (0..1);
+                  # ordering is by RRF rank, which is not human-meaningful.
+                  "score": round(r.strength, 3)} for r in ranked])
 
 
 @app.post("/api/workspaces/{workspace_id}/ask", response_model=AskResponse)

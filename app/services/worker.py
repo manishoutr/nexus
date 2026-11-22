@@ -17,7 +17,7 @@ from pathlib import Path
 from ..db import SessionLocal
 from ..models import Chunk, Document, IngestionJob
 from .chunk import chunk_document
-from .embeddings import embed
+from .embeddings import backend_name, embed_many
 from .extract import extract_pages
 
 log = logging.getLogger("nexus.worker")
@@ -36,10 +36,13 @@ def process_document(db, job: IngestionJob, data_dir: str) -> None:
         raise RuntimeError("no text could be extracted")
 
     db.query(Chunk).filter_by(document_id=doc.id).delete()  # idempotent re-runs
-    for c in chunks:
+    vectors = embed_many([c["text"] for c in chunks])
+    model = backend_name()
+    for c, v in zip(chunks, vectors):
         db.add(Chunk(document_id=doc.id, workspace_id=doc.workspace_id,
                      seq=c["seq"], text=c["text"], page=c["page"],
-                     section=c["section"], embedding=json.dumps(embed(c["text"]))))
+                     section=c["section"], embedding=json.dumps(v),
+                     embedding_model=model))
     doc.page_count = max((p for p, _ in pages), default=0)
     doc.status = "done"
     doc.error = ""
@@ -76,9 +79,43 @@ def _tick() -> None:
         db.close()
 
 
+def reembed_stale(db, batch_size: int = 64) -> int:
+    """Re-embed chunks whose embedding_model differs from the active backend.
+
+    Embedding spaces are incompatible across models, so after a model change
+    stale vectors must be regenerated, never compared against the new space.
+    Returns the number of chunks re-embedded.
+    """
+    current = backend_name()
+    stale = (db.query(Chunk).filter(Chunk.embedding_model != current)
+             .order_by(Chunk.id).all())
+    done = 0
+    for i in range(0, len(stale), batch_size):
+        batch = stale[i:i + batch_size]
+        vectors = embed_many([c.text for c in batch])
+        for c, v in zip(batch, vectors):
+            c.embedding = json.dumps(v)
+            c.embedding_model = current
+        db.commit()
+        done += len(batch)
+    if done:
+        log.info("re-embedded %d chunks with %s", done, current)
+    return done
+
+
 def _loop(interval: float) -> None:
+    migrated = False
     while not _stop.is_set():
         try:
+            if not migrated:
+                migrated = True
+                db = SessionLocal()
+                try:
+                    reembed_stale(db)
+                except Exception:  # noqa: BLE001 - never block the queue on this
+                    log.exception("stale-chunk re-embedding failed")
+                finally:
+                    db.close()
             _tick()
         except Exception:  # noqa: BLE001 - the worker must never die silently
             log.exception("worker tick failed")
@@ -86,6 +123,7 @@ def _loop(interval: float) -> None:
 
 
 def start_worker(interval: float = 1.0) -> threading.Thread:
+    _stop.clear()  # allow a clean restart after stop_worker()
     thread = threading.Thread(target=_loop, args=(interval,), daemon=True,
                               name="nexus-ingestion-worker")
     thread.start()
