@@ -22,6 +22,18 @@ class Settings:
         # A job stuck in "processing" longer than this is presumed orphaned
         # by a crashed worker and goes back to the queue.
         self.job_stale_after_s = float(os.getenv("JOB_STALE_AFTER_S", "300"))
+        # Auth. JWT_SECRET must be set in production; without it a random
+        # per-process secret is generated (tokens die on restart).
+        self.jwt_secret = os.getenv("JWT_SECRET") or None
+        self.access_token_minutes = int(os.getenv("ACCESS_TOKEN_MINUTES", "30"))
+        self.refresh_token_days = int(os.getenv("REFRESH_TOKEN_DAYS", "7"))
+        # Rate limits (slowapi syntax). Storage can be redis://... so the
+        # limits hold across several API processes; memory:// is per-process.
+        self.rate_limit_enabled = os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"
+        self.rate_limit_storage = os.getenv("RATE_LIMIT_STORAGE", "memory://")
+        self.rate_limit_auth = os.getenv("RATE_LIMIT_AUTH", "10/minute")
+        self.rate_limit_ask = os.getenv("RATE_LIMIT_ASK", "20/minute")
+        self.rate_limit_upload = os.getenv("RATE_LIMIT_UPLOAD", "30/minute")
         self.max_upload_mb = int(os.getenv("MAX_UPLOAD_MB", "10"))
         # Embedding backend: auto (sentence-transformers if usable, else
         # hashing), st (require sentence-transformers) or hash (force the

@@ -4,16 +4,25 @@ import logging
 import time
 from pathlib import Path
 
+from typing import Optional
+
 from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
+from . import auth
 from .config import settings
 from .db import SessionLocal, get_db, init_db
-from .models import Chunk, Document, IngestionJob, QaLog, Workspace
-from .schemas import (AskRequest, AskResponse, DocumentOut, SearchRequest,
-                      SearchResponse, WorkspaceIn, WorkspaceOut)
+from .models import (Chunk, Document, IngestionJob, Membership, QaLog, User,
+                     Workspace)
+from .ratelimit import limiter
+from .schemas import (AskRequest, AskResponse, DocumentOut, LoginIn, MemberIn,
+                      RefreshIn, RegisterIn, SearchRequest, SearchResponse,
+                      TokenOut, UserOut, WorkspaceIn, WorkspaceOut)
 from .services import qa as qa_service
 from .services.llm import llm
 from .services.storage import get_storage, new_key
@@ -33,6 +42,9 @@ SEED_FILES = ["retrieval-augmented-generation.pdf", "odisha-handlooms.txt",
 
 app = FastAPI(title="Nexus", version="1.0.0",
               description="AI knowledge and research engine (learning project)")
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 METRICS = {"requests": 0, "errors": 0, "total_latency_ms": 0.0,
            "uploads": 0, "searches": 0, "questions": 0, "abstentions": 0,
@@ -60,7 +72,7 @@ def seed_demo_library() -> None:
     try:
         if db.query(Workspace).count():
             return
-        ws = Workspace(name="Research library")
+        ws = Workspace(name="Research library", owner_id=None, is_public=1)
         db.add(ws)
         db.flush()
         storage = get_storage()
@@ -124,7 +136,7 @@ def health(db: Session = Depends(get_db)):
 
 
 @app.get("/api/metrics")
-def metrics(db: Session = Depends(get_db)):
+def metrics(db: Session = Depends(get_db), user: User = Depends(auth.require_user)):
     avg = (METRICS["total_latency_ms"] / METRICS["requests"]) if METRICS["requests"] else 0.0
     jobs = db.query(IngestionJob).all()
     return {**METRICS, "avg_latency_ms": round(avg, 2),
@@ -136,33 +148,104 @@ def metrics(db: Session = Depends(get_db)):
 
 # --- workspaces -------------------------------------------------------------
 
+@app.post("/api/auth/register", response_model=TokenOut, status_code=201)
+@limiter.limit(settings.rate_limit_auth)
+def register(request: Request, body: RegisterIn, db: Session = Depends(get_db)):
+    email = body.email.strip().lower()
+    if db.query(User).filter_by(email=email).first():
+        raise HTTPException(409, "That email is already registered")
+    user = User(email=email, password_hash=auth.hash_password(body.password))
+    db.add(user)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, "That email is already registered")
+    return TokenOut(access_token=auth.make_token(user.id, "access"),
+                    refresh_token=auth.make_token(user.id, "refresh"))
+
+
+@app.post("/api/auth/login", response_model=TokenOut)
+@limiter.limit(settings.rate_limit_auth)
+def login(request: Request, body: LoginIn, db: Session = Depends(get_db)):
+    user = db.query(User).filter_by(email=body.email.strip().lower()).first()
+    # Same error for unknown email and wrong password.
+    ok = auth.verify_password(body.password, user.password_hash if user else
+                              auth.hash_password("x"))  # equalise timing
+    if not user or not ok:
+        raise HTTPException(401, "Wrong email or password")
+    return TokenOut(access_token=auth.make_token(user.id, "access"),
+                    refresh_token=auth.make_token(user.id, "refresh"))
+
+
+@app.post("/api/auth/refresh", response_model=TokenOut)
+@limiter.limit(settings.rate_limit_auth)
+def refresh(request: Request, body: RefreshIn, db: Session = Depends(get_db)):
+    uid = auth.decode_token(body.refresh_token, "refresh")
+    if db.query(User).filter_by(id=uid).first() is None:
+        raise HTTPException(401, "Unknown user")
+    return TokenOut(access_token=auth.make_token(uid, "access"),
+                    refresh_token=auth.make_token(uid, "refresh"))
+
+
+@app.get("/api/auth/me", response_model=UserOut)
+def me(user: User = Depends(auth.require_user)):
+    return UserOut(id=user.id, email=user.email)
+
+
 @app.post("/api/workspaces", response_model=WorkspaceOut)
-def create_workspace(body: WorkspaceIn, db: Session = Depends(get_db)):
+def create_workspace(body: WorkspaceIn, db: Session = Depends(get_db),
+                     user: User = Depends(auth.require_user)):
     if not body.name.strip():
         raise HTTPException(422, "Workspace name must not be empty")
-    ws = Workspace(name=body.name.strip())
+    ws = Workspace(name=body.name.strip(), owner_id=user.id, is_public=0)
     db.add(ws)
     db.commit()
     db.refresh(ws)
-    return WorkspaceOut(id=ws.id, name=ws.name)
+    return WorkspaceOut(id=ws.id, name=ws.name, role="owner")
 
 
 @app.get("/api/workspaces", response_model=list[WorkspaceOut])
-def list_workspaces(db: Session = Depends(get_db)):
-    return [WorkspaceOut(id=w.id, name=w.name)
-            for w in db.query(Workspace).order_by(Workspace.id)]
+def list_workspaces(db: Session = Depends(get_db),
+                    user: Optional[User] = Depends(auth.optional_user)):
+    """Public workspaces plus the ones this user owns or belongs to."""
+    out = []
+    for w in db.query(Workspace).order_by(Workspace.id):
+        role = auth.role_in(db, w, user)
+        if role:
+            out.append(WorkspaceOut(id=w.id, name=w.name, role=role,
+                                    is_public=bool(w.is_public)))
+    return out
+
+
+@app.post("/api/workspaces/{workspace_id}/members", status_code=204)
+def add_member(workspace_id: int, body: MemberIn, db: Session = Depends(get_db),
+               user: User = Depends(auth.require_user)):
+    auth.require_role(db, workspace_id, user, "owner")
+    target = db.query(User).filter_by(email=body.email.strip().lower()).first()
+    if target is None:
+        raise HTTPException(404, "No user with that email")
+    if target.id == user.id:
+        raise HTTPException(422, "You already own this workspace")
+    m = db.query(Membership).filter_by(workspace_id=workspace_id, user_id=target.id).first()
+    if m:
+        m.role = body.role
+    else:
+        db.add(Membership(workspace_id=workspace_id, user_id=target.id, role=body.role))
+    db.commit()
+    return Response(status_code=204)
 
 
 # --- documents --------------------------------------------------------------
 
 @app.post("/api/workspaces/{workspace_id}/documents", response_model=DocumentOut, status_code=201)
-async def upload_document(workspace_id: int, response: Response,
+@limiter.limit(settings.rate_limit_upload)
+async def upload_document(request: Request, workspace_id: int, response: Response,
                           file: UploadFile = File(...),
-                          db: Session = Depends(get_db)):
+                          db: Session = Depends(get_db),
+                          user: Optional[User] = Depends(auth.optional_user)):
     METRICS["uploads"] += 1
-    ws = db.query(Workspace).filter_by(id=workspace_id).first()
-    if ws is None:
-        raise HTTPException(404, f"Workspace {workspace_id} not found")
+    auth.require_role(db, workspace_id, user, "editor")
     filename = Path(file.filename or "document").name  # display name only
     content = await file.read(settings.max_upload_mb * 1024 * 1024 + 1)
     try:
@@ -203,25 +286,31 @@ async def upload_document(workspace_id: int, response: Response,
 
 
 @app.get("/api/workspaces/{workspace_id}/documents", response_model=list[DocumentOut])
-def list_documents(workspace_id: int, db: Session = Depends(get_db)):
+def list_documents(workspace_id: int, db: Session = Depends(get_db),
+                   user: Optional[User] = Depends(auth.optional_user)):
+    auth.require_role(db, workspace_id, user, "viewer")
     return [_doc_out(d) for d in db.query(Document)
             .filter_by(workspace_id=workspace_id).order_by(Document.id)]
 
 
 @app.get("/api/documents/{document_id}", response_model=DocumentOut)
-def get_document(document_id: int, db: Session = Depends(get_db)):
+def get_document(document_id: int, db: Session = Depends(get_db),
+                 user: Optional[User] = Depends(auth.optional_user)):
     doc = db.query(Document).filter_by(id=document_id).first()
     if doc is None:
         raise HTTPException(404, f"Document {document_id} not found")
+    auth.require_role(db, doc.workspace_id, user, "viewer")
     return _doc_out(doc)
 
 
 @app.delete("/api/documents/{document_id}", status_code=204)
-def delete_document(document_id: int, db: Session = Depends(get_db)):
+def delete_document(document_id: int, db: Session = Depends(get_db),
+                    user: Optional[User] = Depends(auth.optional_user)):
     """Remove the document, its chunks, its jobs and the stored file."""
     doc = db.query(Document).filter_by(id=document_id).first()
     if doc is None:
         raise HTTPException(404, f"Document {document_id} not found")
+    auth.require_role(db, doc.workspace_id, user, "editor")
     key = doc.storage_key or f"{doc.workspace_id}/{doc.filename}"
     db.query(Chunk).filter_by(document_id=doc.id).delete()
     db.query(IngestionJob).filter_by(document_id=doc.id).delete()
@@ -238,7 +327,11 @@ def delete_document(document_id: int, db: Session = Depends(get_db)):
 # --- search & ask -------------------------------------------------------------
 
 @app.post("/api/workspaces/{workspace_id}/search", response_model=SearchResponse)
-def search(workspace_id: int, req: SearchRequest, db: Session = Depends(get_db)):
+@limiter.limit(settings.rate_limit_ask)
+def search(request: Request, workspace_id: int, req: SearchRequest,
+           db: Session = Depends(get_db),
+           user: Optional[User] = Depends(auth.optional_user)):
+    auth.require_role(db, workspace_id, user, "viewer")
     METRICS["searches"] += 1
     ranked = qa_service.retrieve(db, workspace_id, req.query, req.k)
     return SearchResponse(
@@ -252,7 +345,11 @@ def search(workspace_id: int, req: SearchRequest, db: Session = Depends(get_db))
 
 
 @app.post("/api/workspaces/{workspace_id}/ask", response_model=AskResponse)
-def ask(workspace_id: int, req: AskRequest, db: Session = Depends(get_db)):
+@limiter.limit(settings.rate_limit_ask)
+def ask(request: Request, workspace_id: int, req: AskRequest,
+        db: Session = Depends(get_db),
+        user: Optional[User] = Depends(auth.optional_user)):
+    auth.require_role(db, workspace_id, user, "viewer")
     METRICS["questions"] += 1
     if not req.question.strip():
         raise HTTPException(422, "Question must not be empty")

@@ -20,8 +20,9 @@ pytest.importorskip("celery")
 redislite = pytest.importorskip("redislite")
 moto_server = pytest.importorskip("moto.server")
 
+from app.auth import make_token
 from app.db import Base, SessionLocal, engine, init_db  # noqa: E402
-from app.models import Chunk, Document, IngestionJob, Workspace  # noqa: E402
+from app.models import Chunk, Document, IngestionJob, User, Workspace  # noqa: E402
 from app.services import storage as storage_mod  # noqa: E402
 from app.services import worker  # noqa: E402
 from app.services.storage import S3Storage, new_key  # noqa: E402
@@ -34,7 +35,9 @@ def fresh():
     Base.metadata.drop_all(engine)
     init_db()
     db = SessionLocal()
-    db.add(Workspace(name="t"))
+    db.add(User(email="owner@example.com", password_hash="x"))
+    db.flush()
+    db.add(Workspace(name="t", owner_id=1))
     db.commit()
     db.close()
     yield
@@ -71,7 +74,7 @@ def test_ingest_from_s3_then_delete(s3_endpoint, monkeypatch):
     s3 = S3Storage("nexus-test2", s3_endpoint)
     s3.ensure_bucket()
     monkeypatch.setattr(storage_mod, "_storage", s3)
-    client = TestClient(app)
+    client = TestClient(app, headers={"Authorization": "Bearer " + make_token(1, "access")})
     r = client.post("/api/workspaces/1/documents", files={"file": ("a.txt", TXT)})
     assert r.status_code == 201
     doc_id = r.json()["id"]
@@ -129,7 +132,7 @@ def test_upload_is_processed_by_real_celery_worker(celery_worker, monkeypatch):
     from app.config import settings
     from app.main import app
     monkeypatch.setattr(settings, "queue_backend", "celery")
-    client = TestClient(app)
+    client = TestClient(app, headers={"Authorization": "Bearer " + make_token(1, "access")})
     ids = []
     for i in range(5):
         r = client.post("/api/workspaces/1/documents",

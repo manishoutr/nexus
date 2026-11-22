@@ -21,3 +21,5 @@ os.environ["REDIS_URL"] = os.environ.get("TEST_REDIS_URL", "redis://127.0.0.1:63
 TEST_ENV = {k: os.environ[k] for k in (
     "DATABASE_URL", "LLM_MODE", "EMBEDDING_BACKEND", "DATA_DIR",
     "JOB_BACKOFF_BASE_S", "STORAGE_BACKEND", "REDIS_URL")}
+os.environ["RATE_LIMIT_ENABLED"] = "false"
+os.environ["JWT_SECRET"] = "test-secret-test-secret-test-secret-123456"

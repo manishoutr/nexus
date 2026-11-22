@@ -5,12 +5,44 @@ from pydantic import BaseModel, Field
 
 
 class WorkspaceIn(BaseModel):
-    name: str
+    name: str = Field(max_length=100)
+
+
+class RegisterIn(BaseModel):
+    email: str = Field(max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    password: str = Field(min_length=8, max_length=128)
+
+
+class LoginIn(BaseModel):
+    email: str = Field(max_length=254)
+    password: str = Field(max_length=128)
+
+
+class RefreshIn(BaseModel):
+    refresh_token: str
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class UserOut(BaseModel):
+    id: int
+    email: str
+
+
+class MemberIn(BaseModel):
+    email: str
+    role: str = Field(pattern="^(viewer|editor)$")
 
 
 class WorkspaceOut(BaseModel):
     id: int
     name: str
+    role: str = ""
+    is_public: bool = False
 
 
 class DocumentOut(BaseModel):
@@ -24,8 +56,8 @@ class DocumentOut(BaseModel):
 
 
 class SearchRequest(BaseModel):
-    query: str
-    k: int = 5
+    query: str = Field(max_length=1000)
+    k: Optional[int] = Field(default=None, ge=1, le=20)
 
 
 class Passage(BaseModel):
@@ -45,8 +77,8 @@ class SearchResponse(BaseModel):
 
 
 class AskRequest(BaseModel):
-    question: str
-    k: int = 5
+    question: str = Field(max_length=2000)
+    k: Optional[int] = Field(default=None, ge=1, le=20)
 
 
 class Citation(BaseModel):
@@ -62,3 +94,4 @@ class AskResponse(BaseModel):
     citations: List[Citation] = Field(default_factory=list)
     mode: str
     abstained: bool
+    flagged_passages: int = 0   # retrieved passages that looked like injected instructions

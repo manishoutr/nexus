@@ -8,9 +8,10 @@ from datetime import datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
+from app.auth import make_token
 from app.db import Base, SessionLocal, engine, init_db
 from app.main import app
-from app.models import Chunk, Document, IngestionJob, Workspace
+from app.models import Chunk, Document, IngestionJob, User, Workspace
 from app.services import worker
 from app.services.storage import LocalStorage, get_storage, new_key
 from app.services.validate import UploadRejected, validate_upload
@@ -24,7 +25,9 @@ def fresh():
     Base.metadata.drop_all(engine)
     init_db()
     db = SessionLocal()
-    db.add(Workspace(name="t"))
+    db.add(User(email="owner@example.com", password_hash="x"))
+    db.flush()
+    db.add(Workspace(name="t", owner_id=1))
     db.commit()
     db.close()
     yield
@@ -34,7 +37,7 @@ def fresh():
 def client():
     # No `with`: skips startup so the background poller is NOT running and the
     # tests drive the worker explicitly.
-    return TestClient(app)
+    return TestClient(app, headers={"Authorization": "Bearer " + make_token(1, "access")})
 
 
 def upload(client, name, data, ws=1):

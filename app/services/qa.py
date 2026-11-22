@@ -18,6 +18,7 @@ from ..schemas import Citation
 from .embeddings import HASH_BACKEND_NAME, backend_name, tokenize
 from .llm import llm
 from .rerank import rerank
+from .safety import SYSTEM_PROMPT, scan, build_passages_block, clean_question
 from .retrieval import hybrid_scores
 
 
@@ -61,13 +62,6 @@ class _AnswerModel(BaseModel):
     used_chunk_ids: List[int]
 
 
-_QA_SYSTEM = (
-    "You are Nexus, a document Q&A engine. Answer ONLY from the provided "
-    "passages. If the passages do not contain the answer, say the evidence "
-    "is insufficient. Never use outside knowledge. Return JSON with keys: "
-    "answer (string), used_chunk_ids (list of the chunk numbers you used).")
-
-
 def _offline_answer(question: str, ranked: List[RetrievedChunk]) -> str:
     """Deterministic grounded answer: the sentences from the best chunks that
     share the most content words with the question, quoted with references."""
@@ -75,6 +69,8 @@ def _offline_answer(question: str, ranked: List[RetrievedChunk]) -> str:
     best_sentences = []
     for r in ranked[:3]:
         for sent in re.split(r"(?<=[.!?])\s+", r.chunk.text):
+            if scan(sent):  # never echo injection-looking text as an answer
+                continue
             overlap = len(q_terms & set(tokenize(sent)))
             if overlap > 0:
                 best_sentences.append((overlap, r, sent.strip()))
@@ -98,7 +94,8 @@ def _abstain_threshold() -> float:
 
 
 def ask(db, workspace_id: int, question: str, k: Optional[int] = None) -> dict:
-    """Returns {answer, citations, mode, abstained}."""
+    """Returns {answer, citations, mode, abstained, flagged_passages}."""
+    question = clean_question(question)
     ranked = retrieve(db, workspace_id, question, k)
     # With the hashing fallback the vector signal is lexical noise: with
     # enough chunks the max random cosine clears the threshold on its own.
@@ -115,23 +112,27 @@ def ask(db, workspace_id: int, question: str, k: Optional[int] = None) -> dict:
         return {"answer": "I don't have enough evidence in the uploaded "
                           "documents to answer that. Try adding relevant "
                           "documents or rephrasing the question.",
-                "citations": [], "mode": llm.mode, "abstained": True}
+                "citations": [], "mode": llm.mode, "abstained": True,
+                "flagged_passages": 0}
 
     citations = [_citation(r) for r in ranked]
 
+    flagged = sum(1 for r in ranked if scan(r.chunk.text))
     if llm.enabled:
-        passages = "\n\n".join(
-            f"[chunk {i}] ({r.document_name}, page {r.chunk.page})\n{r.chunk.text}"
+        passages, _ = build_passages_block(
+            (i, r.document_name, r.chunk.page, r.chunk.text)
             for i, r in enumerate(ranked))
         result = llm.complete_json(
-            _QA_SYSTEM,
+            SYSTEM_PROMPT,
             f"QUESTION: {question}\n\nPASSAGES:\n{passages}",
             _AnswerModel)
         if result is not None and result.answer.strip():
-            used = set(result.used_chunk_ids)
+            used = {i for i in result.used_chunk_ids if 0 <= i < len(ranked)}
             cited = [c for i, c in enumerate(citations) if i in used] or citations[:2]
-            return {"answer": result.answer.strip(), "citations": cited,
-                    "mode": "claude", "abstained": False}
+            return {"answer": result.answer.strip()[:4000], "citations": cited,
+                    "mode": "claude", "abstained": False,
+                    "flagged_passages": flagged}
 
     return {"answer": _offline_answer(question, ranked),
-            "citations": citations[:3], "mode": "offline", "abstained": False}
+            "citations": citations[:3], "mode": "offline", "abstained": False,
+            "flagged_passages": flagged}

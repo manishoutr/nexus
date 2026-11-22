@@ -23,6 +23,8 @@ def init_db() -> None:
 # upgrade) takes over real migrations.
 _LATE_COLUMNS = [
     ("chunks", "embedding_model", "VARCHAR DEFAULT ''"),
+    ("workspaces", "owner_id", "INTEGER"),
+    ("workspaces", "is_public", "INTEGER DEFAULT 0"),
     ("documents", "storage_key", "VARCHAR DEFAULT ''"),
     ("documents", "content_hash", "VARCHAR"),
     ("ingestion_jobs", "next_run_at", "TIMESTAMP"),

@@ -14,6 +14,13 @@ from app.main import app  # noqa: E402
 
 client = TestClient(app)
 
+
+def _login(email="api@example.com"):
+    r = client.post("/api/auth/register", json={"email": email, "password": "correct horse"})
+    if r.status_code == 409:
+        r = client.post("/api/auth/login", json={"email": email, "password": "correct horse"})
+    client.headers["Authorization"] = "Bearer " + r.json()["access_token"]
+
 DOC = b"""Retrieval Notes
 
 Hybrid retrieval combines BM25 keyword ranking with vector similarity.
@@ -25,6 +32,7 @@ is insufficient.
 
 def test_full_demo_flow():
     with client:  # startup: tables + background worker
+        _login()
         # 1. workspace
         res = client.post("/api/workspaces", json={"name": "demo"})
         assert res.status_code == 200
@@ -71,6 +79,7 @@ def test_full_demo_flow():
 
 def test_upload_validation():
     with client:
+        _login()
         ws_id = client.post("/api/workspaces", json={"name": "validation"}).json()["id"]
         res = client.post(f"/api/workspaces/{ws_id}/documents",
                           files={"file": ("evil.exe", b"nope", "application/octet-stream")})
@@ -85,6 +94,7 @@ def test_upload_validation():
 
 def test_metrics_endpoint():
     with client:
+        _login()
         client.get("/api/health")
         res = client.get("/api/metrics")
         assert res.status_code == 200

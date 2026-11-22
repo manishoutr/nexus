@@ -6,12 +6,36 @@ from sqlalchemy import Column, DateTime, Float, Integer, String, Text, UniqueCon
 from .db import Base
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True)
+    email = Column(String, nullable=False, unique=True, index=True)
+    password_hash = Column(String, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+
 class Workspace(Base):
     __tablename__ = "workspaces"
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
+    owner_id = Column(Integer, nullable=True, index=True)
+    # Public workspaces (the seeded demo) are readable without logging in.
+    # Writing always needs a role.
+    is_public = Column(Integer, default=0)
     created_at = Column(DateTime, server_default=func.now())
+
+
+class Membership(Base):
+    """Who can do what in a workspace. Roles: viewer < editor < owner."""
+    __tablename__ = "memberships"
+    __table_args__ = (UniqueConstraint("workspace_id", "user_id", name="uq_member"),)
+
+    id = Column(Integer, primary_key=True)
+    workspace_id = Column(Integer, index=True, nullable=False)
+    user_id = Column(Integer, index=True, nullable=False)
+    role = Column(String, nullable=False, default="viewer")
 
 
 class Document(Base):
