@@ -1,0 +1,7 @@
+Background task queues
+
+A task queue lets a web server hand slow work to separate worker processes. The server puts a message on a broker and returns at once. A worker takes the message, runs the task and records the result.
+
+Celery is a task queue for Python that can use Redis or RabbitMQ as its broker. By default a message is acknowledged when a worker starts the task. With late acknowledgement, the message is acknowledged only after the task ends, so a task is run again if the worker dies half way. That makes it important for tasks to be idempotent.
+
+Retries with exponential backoff stop a failing dependency from being hit in a tight loop. A periodic scheduler called beat can enqueue regular jobs, such as a sweep that finds work left behind by a crashed worker. Queue depth and task age are the most useful numbers to watch.

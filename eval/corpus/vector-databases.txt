@@ -1,0 +1,7 @@
+Vector search in databases
+
+A vector index stores embeddings so that the nearest ones to a query vector can be found without comparing every row. Exact search scans all vectors and gives perfect recall, but its cost grows linearly with the number of rows.
+
+Approximate indexes trade a little recall for speed. HNSW builds a layered graph of neighbours and walks it from the top layer down. IVF splits the space into lists and searches only the lists closest to the query. Both have settings that move the balance between speed and recall.
+
+Some systems are dedicated vector stores. Others add vector types to an existing relational database, so embeddings sit next to ordinary columns and can be filtered with normal SQL. The right choice depends on the data size, the filters needed and the operational skills of the team. Distance can be measured by cosine, inner product or Euclidean distance, and the index must be built for the same measure that queries use.

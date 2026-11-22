@@ -59,7 +59,7 @@ def test_eval_run_is_reproducible_and_produces_report(tmp_path):
     a = run()
     for key in ("meta", "overall", "dev", "test", "by_type", "threshold_sweep", "failures", "questions"):
         assert key in a
-    assert a["overall"]["questions"] == 44
+    assert a["overall"]["questions"] == 56
     assert a["overall"]["citation_validity"] == 1.0   # every shown citation verifies
     b = run()
     # deterministic: same dataset and backend give identical metrics

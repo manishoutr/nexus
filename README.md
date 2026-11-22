@@ -1,141 +1,124 @@
 # Nexus
 
-An AI knowledge and research engine, built as a learning project. Upload a
-collection of documents, search across them with hybrid retrieval, and ask
-questions with answers grounded in - and cited back to - the exact source
-passages.
+A document research engine built as a learning project. Upload documents, search them with hybrid retrieval, and ask
+questions. Answers cite the exact passages they came from, and Nexus says so when the documents do not contain the answer.
 
-> Learning-project notes are inline across the codebase. This README explains
-> what is built, why it is built that way, and what is deliberately left out.
+Stack: React, FastAPI, PostgreSQL with pgvector, Redis and Celery, S3-compatible object storage, sentence-transformers
+embeddings, and the Claude API (see "What is and is not verified" for what has actually been run).
+
+## What is and is not verified
+
+Read this first. It is the honest status of each claim.
+
+| Piece | Status |
+|---|---|
+| Retrieval, chunking, abstention, citations, auth, ingestion reliability | Tested (automated tests and the evaluation below). |
+| PostgreSQL 16 + pgvector 0.6.2 | Tested locally on a real server started with pip (`scripts/test_on_postgres.py`). Not a hosted database. |
+| Redis + Celery worker | Tested locally with a real Redis 6.2 and a real Celery worker process. |
+| S3 storage | Tested against moto, an S3-compatible server. **Not tested against AWS S3.** |
+| Claude API | **Not tested with a real key.** The code path is tested with a fake client only. The app runs in offline mode (answers built from retrieved sentences) unless `ANTHROPIC_API_KEY` is set, and the UI says which mode is active. |
+| Docker / docker-compose | Files written and YAML-checked. **Docker was not available where this was built, so they have never been built or run.** |
+| GitHub Actions CI | Workflow written; see the CI badge section of `docs/UPGRADE_LOG.md` for the first real run. |
+| Live demo | Runs an older light build (hashing embeddings, SQLite). It does not have the upgrades described here yet. |
 
 ## What it does
 
-1. **Workspaces and upload** - create a workspace, upload PDF / DOCX / TXT
-   files (type and size validated, originals stored locally).
-2. **Asynchronous ingestion** - a durable job queue (database-backed) with a
-   background worker: extract text, split into chunks, embed, store.
-   Failures retry up to 3 attempts, then are marked failed with the error.
-3. **Chunking with metadata** - sentence-aware ~600-character chunks with
-   ~120-character overlap; every chunk keeps its document, page and section.
-4. **Hybrid retrieval** - BM25 keyword scoring + vector cosine similarity,
-   merged with min-max normalization.
-5. **Grounded Q&A with citations** - answers are built only from retrieved
-   passages and cite document + page/section for every claim.
-6. **Abstention** - when the best passage scores below a documented
-   threshold, Nexus says it does not have enough evidence instead of
-   inventing an answer.
+1. **Accounts and workspaces.** Register, sign in, create private workspaces, add members as viewer or editor. A public
+   demo workspace can be read without an account.
+2. **Upload.** PDF, DOCX, TXT and Markdown, validated by content. The same bytes uploaded twice are stored once.
+3. **Background ingestion.** Extract, chunk (about 600 characters with overlap, page and section kept), embed, store.
+   Atomic job claims, retries with backoff, recovery of jobs from dead workers. A Celery + Redis queue is available.
+4. **Hybrid retrieval.** BM25 and vector search merged with reciprocal rank fusion, with an optional cross-encoder
+   reranker. With PostgreSQL the vector search runs inside the database (pgvector, HNSW index).
+5. **Grounded answers with citations.** Every answer cites document and page or section. Citations are checked against
+   what was retrieved.
+6. **Abstention.** If the evidence is weak the answer says so instead of guessing.
+7. **Prompt-injection defense in depth.** Passages are treated as untrusted data and instruction-like sentences are
+   removed. This is a heuristic filter, not a guarantee.
 
-## Live demo
+![Desktop](docs/screenshots/react-desktop.png)
+![Phone](docs/screenshots/react-phone.png)
 
-https://nexus-pkju.onrender.com
-
-Hosted on Render's free tier in offline mode (no API key): answers are
-extractive fallbacks built only from the retrieved passages. A demo
-"Research library" workspace is seeded on first boot. Free-tier notes: the
-service sleeps after 15 minutes idle (first load can take about a minute to
-wake), and uploaded documents are ephemeral - they reset on redeploy or
-restart.
-
-## Screenshots
-
-![Search: hybrid retrieval across the library](docs/screenshots/search.png)
-
-![Reader: the exact source passage for a result](docs/screenshots/reader.png)
-
-![Ask: an answer with citations back to the sources](docs/screenshots/ask.png)
-
-## Quickstart (5 minutes, no API key needed)
+## Quickstart (no API key, no extra services)
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python scripts/make_seed_docs.py   # optional: PDF + DOCX seed documents
-python run.py                      # http://localhost:8000
+pip install -r requirements.txt            # light build: hashing embeddings
+python run.py                              # http://localhost:8000
 ```
+The React app is already built into `app/static`. To change it: `cd frontend && npm install && npm run dev`
+(proxies `/api` to port 8000), then `npm run build`.
 
-Demo path:
+For real embeddings and the reranker: `pip install -r requirements-ml.txt` (pulls torch, large) and set
+`EMBEDDING_BACKEND=st`. Full environment reference: `docs/ENVIRONMENT.md`.
 
-1. Open http://localhost:8000. On first boot Nexus creates a "Research
-   library" workspace and ingests the three files in `seed_docs/` (TXT, PDF
-   and DOCX - one of each format), exactly like user uploads; watch their
-   status move pending -> done. You can also create more workspaces and
-   upload your own files.
-2. **Search** for "hybrid retrieval" and open the ranked passages.
-3. **Ask** "Why combine keyword and vector search?" and check that each
-   claim in the answer cites a document and page/section.
-4. **Ask** something unrelated ("Who won the 1998 world cup final?") and
-   watch Nexus abstain instead of guessing.
+### Full stack
+```bash
+JWT_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(48))") docker compose up --build
+```
+Starts the API, a Celery worker and beat, PostgreSQL with pgvector, Redis and MinIO. **Not yet run, see above.**
+Without Docker, the same pieces can be started as separate processes; `tests/integration` does exactly that.
 
-Run the tests:
+### Production settings
+Set `APP_ENV=production` and a `JWT_SECRET` of 32+ random characters; the app refuses to start otherwise. Use PostgreSQL
+with pgvector, a shared `RATE_LIMIT_STORAGE` (Redis) if you run more than one process, and persistent object storage
+(local disk is ephemeral on most free hosts). Deploy notes and memory needs: `docs/ENVIRONMENT.md`.
+
+## Tests
 
 ```bash
 pip install -r requirements-dev.txt
-pytest
+python -m pytest                           # SQLite, plus real Redis/Celery/S3(moto) integration tests
+python scripts/test_on_postgres.py         # the suite on a real PostgreSQL + pgvector
+cd frontend && npm test                    # React tests (vitest)
+ruff check .
 ```
+Last local run: 92 passed and 5 skipped on SQLite (the skipped ones need Postgres), 91 passed on PostgreSQL,
+9 frontend tests passed, ruff clean. An end-to-end run in a real headless Chrome registered a user, created a workspace,
+uploaded a file, waited for ingestion and asked a question.
 
-## Claude integration
+## Evaluation
 
-The app uses the Anthropic Messages API behind a single service layer
-(`app/services/llm.py`). Set `ANTHROPIC_API_KEY` (see `.env.example`) and
-answers are generated by Claude from the retrieved passages with strict
-answer-only-from-evidence instructions; the output is schema-validated and
-the citations it claims are checked against what was actually retrieved.
+`python -m eval.run --backend hash|st [--rerank]` ingests 3 seed documents plus 5 distractor documents (22 chunks) and
+runs 56 questions: single-fact, multi-document, paraphrased, unanswerable-but-related, and unanswerable-unrelated.
+Offline answer mode, no network. Results are in `eval/results/` and shown at `/eval.html`.
 
-**Without a key the app runs in OFFLINE mode**: answers are assembled
-deterministically from the top retrieved sentences and labelled `offline`.
-Retrieval, chunking, citations and abstention are identical in both modes -
-the LLM only ever phrases an answer over evidence the pipeline already found.
+| System | Hybrid MRR | Abstention accuracy (all / held-out test) | Unanswerable questions wrongly answered | Answerable questions wrongly refused |
+|---|---|---|---|---|
+| Hashing embeddings | 0.902 | 76.8% / 71.9% | 75.0% | 2.5% |
+| MiniLM embeddings | 0.908 | 78.6% / 75.0% | 75.0% | 0.0% |
+| MiniLM + cross-encoder gate | 0.963 | 89.3% / 87.5% | 18.8% | 7.5% |
 
-## Architecture
+BM25 alone scores MRR 0.933 on this set, which is higher than hybrid for the first two rows; the questions are short and
+share words with their passages. Thresholds were tuned on the dev split only; the "held-out test" column was not used for
+tuning. The dataset is small and written by the developer, so these are directional numbers, not benchmarks. Without the
+reranker, three quarters of related-but-unanswerable questions still get an answer.
 
-```
-app/
-  main.py               FastAPI routes + reliability metrics
-  config.py             environment-driven settings
-  db.py / models.py     SQLAlchemy; jobs table doubles as the queue
-  schemas.py            API contracts
-  services/
-    extract.py          PDF (page-aware) / DOCX / TXT -> (page, text) pairs
-    chunk.py            sentence-aware overlapping chunks with metadata
-    embeddings.py       deterministic hashing embeddings (256-dim, no network)
-    retrieval.py        BM25 + vector hybrid, min-max merged
-    worker.py           threaded ingestion worker with retries (Celery-ready)
-    qa.py               retrieve -> abstain-or-answer -> cite
-    llm.py              the only file that talks to the Anthropic SDK
-  static/               zero-build frontend (vanilla JS, served by FastAPI)
-seed_docs/              three demo documents (TXT/PDF/DOCX)
-tests/                  chunking, extraction, retrieval, Q&A grounding, API flow
-```
+## Architecture and API
+- `docs/ARCHITECTURE.md`: diagram, request paths, data model.
+- `docs/API.md`: every endpoint, roles, error codes, curl example.
+- `docs/ENVIRONMENT.md`: settings and deployment requirements.
+- `docs/UPGRADE_LOG.md`: the engineering upgrade, phase by phase, with test numbers and what was not proven.
 
-Data storage defaults to SQLite. Set `DATABASE_URL=postgresql+psycopg2://...`
-for PostgreSQL; `docker-compose.yml` includes an optional `pgvector` profile.
+## Design decisions worth being able to explain
+- **The jobs table is the queue.** Claims are one conditional UPDATE, so exactly one worker runs a job. The same function
+  runs under the threaded poller or Celery.
+- **Rank fusion plus a separate strength signal.** RRF only encodes rank, so it cannot say "nothing relevant". Abstention
+  uses an absolute score instead.
+- **The model never does retrieval and has no tools.** Code finds the evidence; the model only phrases an answer.
+- **Not-found and forbidden look the same** for private workspaces, so ids cannot be probed.
+- **Migrations are idempotent**, so a database created before Alembic is adopted without data loss.
 
-## Engineering decisions worth explaining in an interview
-
-- **The jobs table is the queue.** Uploads never block on processing, the
-  worker survives restarts, and every failure is inspectable in the API. In
-  production the same `process_document()` drops into Celery/Redis unchanged
-  - the task boundary was designed for that swap.
-- **Abstention is measured, not hoped for.** `/api/metrics` counts
-  abstentions separately, and the threshold is a named constant you can tune
-  and evaluate.
-- **Citations are structural, not decorative.** A citation is the chunk's
-  stored metadata (document, page, section), so it cannot drift from what
-  was actually retrieved.
-- **The LLM never does retrieval.** Search indexes and plain code find the
-  evidence; the model only phrases the answer. That is what makes the
-  no-outside-knowledge rule enforceable.
-
-## Known limitations (honest list)
-
-- Hashing embeddings capture lexical overlap, not deep semantics. Swapping
-  in a real embedding model means replacing `embed()` and re-ingesting.
-- Retrieval merges two normalized rankings with a fixed weight; a learned
-  reranker would improve ordering on harder queries.
-- Offline-mode abstention is a retrieval-score threshold: a question sharing
-  common words with a document (e.g. "capital") can pass it and get a generic
-  answer composed from the top passage. Claude mode judges relevance instead.
-- DOCX/TXT have no real page numbers; their citations use sections instead.
-- The threaded worker processes one job at a time; concurrent uploads queue.
-  Horizontal scaling is the Celery swap described above.
-- No authentication: workspaces are shared by everyone on the instance.
+## Known limitations
+- No real Claude call has been made. Claude mode is unverified end to end.
+- S3 was tested against moto, not AWS. Docker files and CI have not been executed (see the table).
+- Refresh tokens cannot be revoked, there is no password reset and no email verification. Tokens are kept in
+  `localStorage`, which any script on the page could read.
+- The injection filter is a list of known phrasings. A determined attacker can phrase around it.
+- Offline answers are extracted sentences, not written prose. Without the reranker, abstention on related-but-unanswerable
+  questions is weak (table above).
+- The evaluation set is small (56 questions) and written by one person.
+- Rate limits are per process unless `RATE_LIMIT_STORAGE` points at Redis; sharing was tested only at the storage layer.
+- No test kills a Celery worker with `kill -9` mid-job; recovery is tested by simulating the dead claim.
+- DOCX and TXT have no real page numbers; their citations use sections.
+- The sentence-transformers build needs torch. It is expected not to fit a 512 MB free host (not measured).

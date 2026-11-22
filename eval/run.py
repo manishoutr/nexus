@@ -53,10 +53,13 @@ def build_corpus():
     ws = Workspace(name="eval", owner_id=None, is_public=1)
     db.add(ws)
     db.flush()
-    for p in sorted((ROOT / "seed_docs").iterdir()):
-        if p.name not in ("retrieval-augmented-generation.pdf", "odisha-handlooms.txt",
-                          "bhubaneswar-smart-city.docx"):
-            continue
+    seed = [p for p in sorted((ROOT / "seed_docs").iterdir())
+            if p.name in ("retrieval-augmented-generation.pdf", "odisha-handlooms.txt",
+                          "bhubaneswar-smart-city.docx")]
+    # Distractor documents: topic-adjacent text that contains no answers to the
+    # unanswerable questions. They make retrieval and abstention harder.
+    distractors = sorted((ROOT / "eval" / "corpus").glob("*.txt"))
+    for p in seed + distractors:
         data = p.read_bytes()
         key = new_key(ws.id)
         get_storage().put(key, data)

@@ -42,3 +42,15 @@
 {"id": "q42", "type": "unanswerable_far", "question": "How do I bake sourdough bread?", "answerable": false, "evidence": [], "split": "dev"}
 {"id": "q43", "type": "unanswerable_far", "question": "What is the boiling point of water at sea level?", "answerable": false, "evidence": [], "split": "test"}
 {"id": "q44", "type": "unanswerable_far", "question": "Explain quantum entanglement.", "answerable": false, "evidence": [], "split": "dev"}
+{"id": "q45", "type": "single", "question": "Which style of architecture has a deul, a jagamohana and a nata mandira?", "answerable": true, "evidence": [{"doc": "odisha-temples.txt", "phrase": "The Kalinga style of architecture has three parts"}], "split": "test"}
+{"id": "q46", "type": "single", "question": "How many pairs of wheels does the Konark Sun Temple have?", "answerable": true, "evidence": [{"doc": "odisha-temples.txt", "phrase": "twelve pairs of carved stone wheels"}], "split": "test"}
+{"id": "q47", "type": "paraphrase", "question": "How does an approximate index like HNSW find close vectors quickly?", "answerable": true, "evidence": [{"doc": "vector-databases.txt", "phrase": "walks it from the top layer down"}], "split": "test"}
+{"id": "q48", "type": "single", "question": "What is a presigned URL?", "answerable": true, "evidence": [{"doc": "object-storage.txt", "phrase": "a link that carries a temporary signature"}], "split": "test"}
+{"id": "q49", "type": "single", "question": "When does the south-west monsoon bring most of the rain to Odisha?", "answerable": true, "evidence": [{"doc": "monsoon-and-farming.txt", "phrase": "between June and September"}], "split": "test"}
+{"id": "q50", "type": "paraphrase", "question": "Why should background tasks be safe to run twice?", "answerable": true, "evidence": [{"doc": "task-queues.txt", "phrase": "important for tasks to be idempotent"}], "split": "test"}
+{"id": "q51", "type": "single", "question": "What does Celery beat do?", "answerable": true, "evidence": [{"doc": "task-queues.txt", "phrase": "can enqueue regular jobs"}], "split": "test"}
+{"id": "q52", "type": "multi", "question": "Name a broker that Celery can use, and say what an object key is in object storage.", "answerable": true, "evidence": [{"doc": "task-queues.txt", "phrase": "Redis or RabbitMQ"}, {"doc": "object-storage.txt", "phrase": "Each object has a key, which works like a path name"}], "split": "test"}
+{"id": "q53", "type": "unanswerable_near", "question": "How much does S3 storage cost per gigabyte per month?", "answerable": false, "evidence": [], "split": "test"}
+{"id": "q54", "type": "unanswerable_near", "question": "How many pilgrims attend the Rath Yatra each year?", "answerable": false, "evidence": [], "split": "test"}
+{"id": "q55", "type": "unanswerable_near", "question": "What is the default HNSW ef_construction value?", "answerable": false, "evidence": [], "split": "test"}
+{"id": "q56", "type": "unanswerable_near", "question": "What is the minimum support price of rice?", "answerable": false, "evidence": [], "split": "test"}

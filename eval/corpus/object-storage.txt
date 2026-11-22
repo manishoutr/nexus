@@ -1,0 +1,7 @@
+Object storage basics
+
+Object storage keeps files as objects inside buckets. Each object has a key, which works like a path name, plus its bytes and some metadata. There are no real folders: a slash in a key is only part of the name, and tools show prefixes as if they were folders.
+
+Applications usually talk to a bucket through an HTTP API. A presigned URL is a link that carries a temporary signature, so a person can download or upload one object for a short time without having account credentials. Buckets should be private by default, and access is granted with policies.
+
+Many other services copy the same API. That makes it possible to run a local S3-compatible server for development and tests, then point the same client code at a hosted bucket by changing the endpoint and credentials.
