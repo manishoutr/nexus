@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from .config import settings
-from .db import get_db, init_db
+from .db import SessionLocal, get_db, init_db
 from .models import Chunk, Document, IngestionJob, QaLog, Workspace
 from .schemas import (AskRequest, AskResponse, DocumentOut, SearchRequest,
                       SearchResponse, WorkspaceIn, WorkspaceOut)
@@ -21,6 +21,12 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("nexus")
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+BASE_DIR = Path(__file__).resolve().parent.parent
+SEED_DIR = BASE_DIR / "seed_docs"
+# One file per demo document (seed_docs also keeps .txt twins of the PDF/DOCX
+# for inspection; only the primary formats are ingested).
+SEED_FILES = ["retrieval-augmented-generation.pdf", "odisha-handlooms.txt",
+              "bhubaneswar-smart-city.docx"]
 
 app = FastAPI(title="Nexus", version="1.0.0",
               description="AI knowledge and research engine (learning project)")
@@ -41,10 +47,45 @@ async def metrics_middleware(request: Request, call_next):
     return response
 
 
+def seed_demo_library() -> None:
+    """First boot only: create the demo workspace and ingest seed_docs.
+
+    Mirrors the upload endpoint (file into data_dir, Document row, ingestion
+    job) so the worker processes them exactly like user uploads.
+    """
+    db = SessionLocal()
+    try:
+        if db.query(Workspace).count():
+            return
+        ws = Workspace(name="Research library")
+        db.add(ws)
+        db.flush()
+        dest_dir = Path(settings.data_dir) / str(ws.id)
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        seeded = 0
+        for name in SEED_FILES:
+            src = SEED_DIR / name
+            if not src.exists():
+                continue
+            content = src.read_bytes()
+            (dest_dir / name).write_bytes(content)
+            doc = Document(workspace_id=ws.id, filename=name, content_type="",
+                           size_bytes=len(content), status="pending")
+            db.add(doc)
+            db.flush()
+            db.add(IngestionJob(document_id=doc.id))
+            seeded += 1
+        db.commit()
+        log.info("seeded demo library with %d documents", seeded)
+    finally:
+        db.close()
+
+
 @app.on_event("startup")
 def startup() -> None:
     init_db()
     Path(settings.data_dir).mkdir(parents=True, exist_ok=True)
+    seed_demo_library()
     app.state.worker = start_worker()
 
 

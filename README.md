@@ -36,13 +36,15 @@ python run.py                      # http://localhost:8000
 
 Demo path:
 
-1. Open http://localhost:8000 and create a workspace (e.g. "research").
-2. Upload the three files in `seed_docs/` (TXT, PDF and DOCX - one of each
-   format). Watch their status move pending -> done.
-3. **Search** for "hybrid retrieval" and open the ranked passages.
-4. **Ask** "Why combine keyword and vector search?" and check that each
+1. Open http://localhost:8000. On first boot Nexus creates a "Research
+   library" workspace and ingests the three files in `seed_docs/` (TXT, PDF
+   and DOCX - one of each format), exactly like user uploads; watch their
+   status move pending -> done. You can also create more workspaces and
+   upload your own files.
+2. **Search** for "hybrid retrieval" and open the ranked passages.
+3. **Ask** "Why combine keyword and vector search?" and check that each
    claim in the answer cites a document and page/section.
-5. **Ask** something unrelated ("Who won the 1998 world cup final?") and
+4. **Ask** something unrelated ("Who won the 1998 world cup final?") and
    watch Nexus abstain instead of guessing.
 
 Run the tests:
