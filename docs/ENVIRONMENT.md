@@ -25,7 +25,7 @@ All settings are environment variables read in `app/config.py`. `.env.example` l
   (not measured here; render's free tier is 512 MB, so it is expected not to fit).
 
 ## Docker
-`docker-compose.yml` defines api, worker, beat, db, redis, minio and a bucket-init job.
+`docker-compose.yml` defines api, worker, beat, db, redis and minio (the app creates the bucket itself).
 `docker compose up --build` needs `JWT_SECRET` set; `WITH_ML=1` builds the sentence-transformers image.
 **Status: the compose file was parsed as YAML and the Dockerfile reviewed, but Docker was not available
 where this was written, so neither has been built or run.** The same service combination (real Redis, Celery
