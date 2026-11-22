@@ -15,7 +15,11 @@ _TOKEN_RE = re.compile(r"[a-z0-9+#.]+")
 STOPWORDS = {"a", "an", "the", "in", "on", "at", "of", "to", "for",
              "and", "or", "with", "using", "is", "are", "by", "from",
              "as", "our", "you", "your", "we", "will", "this", "that",
-             "it", "its", "be", "used", "use"}
+             "it", "its", "be", "used", "use",
+             "what", "which", "who", "whom", "whose", "when", "where",
+             "why", "how", "do", "does", "did", "can", "could", "should",
+             "would", "i", "me", "my", "he", "she", "they", "them", "his",
+             "her", "their", "there", "here"}
 
 
 def tokenize(text: str) -> List[str]:

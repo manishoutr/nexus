@@ -85,7 +85,15 @@ def _offline_answer(question: str, ranked: List[RetrievedChunk]) -> str:
 def ask(db, workspace_id: int, question: str, k: int = 5) -> dict:
     """Returns {answer, citations, mode, abstained}."""
     ranked = retrieve(db, workspace_id, question, k)
-    if not ranked or ranked[0].score < settings.abstain_threshold:
+    # Offline embeddings are lexical (hashing), so a top score built only on
+    # vector signal is hashing noise: with enough chunks the max random
+    # cosine clears the threshold on its own. Require at least one shared
+    # content word before trusting an offline answer. Claude mode judges
+    # relevance from the passages itself, so the gate stays score-only there.
+    q_terms = set(tokenize(question))
+    has_lexical = any(q_terms & set(tokenize(r.chunk.text)) for r in ranked[:3])
+    weak = not ranked or ranked[0].score < settings.abstain_threshold
+    if weak or (not llm.enabled and not has_lexical):
         return {"answer": "I don't have enough evidence in the uploaded "
                           "documents to answer that. Try adding relevant "
                           "documents or rephrasing the question.",

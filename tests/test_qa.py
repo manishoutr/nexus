@@ -60,3 +60,36 @@ def test_empty_workspace_abstains():
     result = ask(db, ws.id, "anything at all?")
     assert result["abstained"]
     db.close()
+
+
+def test_unrelated_question_abstains_over_many_chunks(db_path=None):
+    """Regression: with many chunks, the max random hashing cosine alone
+    cleared the abstain threshold (vector noise). A question with zero
+    lexical overlap must abstain regardless of corpus size."""
+    db, ws_id = _seed()
+    from app.models import Document, Chunk
+    from app.services.embeddings import embed
+    doc = Document(workspace_id=ws_id, filename="filler.txt", status="done",
+                   size_bytes=1)
+    db.add(doc)
+    db.flush()
+    fillers = [
+        "The committee published its annual report on municipal water usage and pipe maintenance schedules.",
+        "Seasonal monsoon patterns influence sowing dates across the coastal plains.",
+        "A bibliography of nineteenth century printing presses follows this introduction.",
+        "The railway timetable lists forty departures before noon on weekdays.",
+        "Careful pruning keeps the orchard productive for decades.",
+        "Museum visitors often ask about the bronze gallery on the second floor.",
+        "The recipe calls for slow fermentation at cool room temperature.",
+        "Traffic surveys counted bicycles at twelve intersections last spring.",
+        "What remains uncertain is the completion date for the riverside promenade.",
+    ]
+    for i in range(4):
+        for j, text in enumerate(fillers):
+            db.add(Chunk(document_id=doc.id, workspace_id=ws_id,
+                         seq=i * len(fillers) + j, text=text,
+                         embedding=__import__("json").dumps(embed(text))))
+    db.commit()
+    result = ask(db, ws_id, "What is the airspeed velocity of an unladen swallow?")
+    assert result["abstained"]
+    db.close()
