@@ -100,7 +100,7 @@ jobs:
         run: |
           docker build --build-arg WITH_ONNX=1 -t nexus-onnx .
           SECRET=$(python3 -c 'import secrets;print(secrets.token_urlsafe(48))')
-          docker run -d --name n -p 8000:8000 -e APP_ENV=production -e EMBEDDING_BACKEND=onnx \
+          docker run -d --name nexus-onnx-c -p 8000:8000 -e APP_ENV=production -e EMBEDDING_BACKEND=onnx \
             -e JWT_SECRET="$SECRET" nexus-onnx > /dev/null
       - name: wait for readiness
         run: |
@@ -108,7 +108,7 @@ jobs:
             curl -sf localhost:8000/api/ready > /dev/null && exit 0
             sleep 2
           done
-          docker logs n | tail -40
+          docker logs nexus-onnx-c | tail -40
           exit 1
       - name: sign up, upload, ask
         run: |
@@ -122,7 +122,7 @@ jobs:
           ANS=$(curl -sf $B/api/workspaces/$WS/ask -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
             -d '{"question":"Which weave uses ikat?"}')
           echo "$ANS" | python3 -c 'import sys,json;a=json.load(sys.stdin);print(a["abstained"],len(a["citations"]));sys.exit(1 if a["abstained"] or not a["citations"] else 0)'
-          docker logs n 2>&1 | grep -m1 "embedding backend: onnxruntime"
+          docker logs nexus-onnx-c 2>&1 | grep -m1 "embedding backend: onnxruntime"
       - name: logs on failure
         if: failure()
-        run: docker logs n 2>&1 | tail -60
+        run: docker logs nexus-onnx-c 2>&1 | tail -60
