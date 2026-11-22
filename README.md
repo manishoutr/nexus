@@ -8,7 +8,7 @@ passages.
 > Learning-project notes are inline across the codebase. This README explains
 > what is built, why it is built that way, and what is deliberately left out.
 
-## What it does (all working end to end)
+## What it does
 
 1. **Workspaces and upload** - create a workspace, upload PDF / DOCX / TXT
    files (type and size validated, originals stored locally).
