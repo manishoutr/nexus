@@ -4,7 +4,7 @@
 flowchart LR
   UI[React app<br/>Vite build served by FastAPI] -->|JWT bearer| API[FastAPI]
   API --> DB[(PostgreSQL + pgvector<br/>or SQLite)]
-  API -->|put / delete| S3[(Object storage<br/>local disk, S3, MinIO)]
+  API -->|put / delete| S3[(Object storage<br/>local disk, S3, any S3-compatible server)]
   API -->|enqueue ingest_job| Q{{Queue}}
   Q -->|QUEUE_BACKEND=db| P[Threaded poller in the API process]
   Q -->|QUEUE_BACKEND=celery| R[(Redis broker)] --> W[Celery worker]

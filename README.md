@@ -57,7 +57,7 @@ For real embeddings and the reranker: `pip install -r requirements-ml.txt` (pull
 ```bash
 JWT_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(48))") docker compose up --build
 ```
-Starts the API, a Celery worker and beat, PostgreSQL with pgvector, Redis and MinIO. **Not yet run, see above.**
+Starts the API, a Celery worker and beat, PostgreSQL with pgvector, Redis and an in-memory S3-compatible server (moto). **Not yet run on my machine; see the Docker row above for the CI result.**
 Without Docker, the same pieces can be started as separate processes; `tests/integration` does exactly that.
 
 ### Production settings
